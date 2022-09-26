@@ -24,7 +24,8 @@ namespace PurenailCore.RandoUtil
 
         public static void ApplyLogicFix(Tester tester, GenerationSettings gs, LogicManagerBuilder lmb)
         {
-            if (!tester(gs)) return;
+            // Don't apply the fix twice.
+            if (!tester(gs) || lmb.LogicLookup.ContainsKey(Gate1Proxy)) return;
 
             lmb.AddWaypoint(new(Gate1Proxy, lmb.LogicLookup[Gate1].ToInfix()));
             lmb.AddWaypoint(new(Gate2Proxy, lmb.LogicLookup[Gate2].ToInfix()));
