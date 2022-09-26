@@ -1,11 +1,6 @@
 ﻿using RandomizerCore.Logic;
 using RandomizerMod.RC;
 using RandomizerMod.Settings;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PurenailCore.RandoUtil
 {

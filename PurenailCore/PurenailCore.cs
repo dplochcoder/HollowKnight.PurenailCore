@@ -1,5 +1,5 @@
 ﻿using Modding;
-using System;
+using PurenailCore.ICUtil;
 
 namespace PurenailCore
 {
@@ -12,5 +12,10 @@ namespace PurenailCore
         public override string GetVersion() => Version;
 
         public PurenailCore() : base("Purenail Core") { Instance = this; }
+
+        public override void Initialize()
+        {
+            PriorityEvents.Setup();
+        }
     }
 }
