@@ -10,27 +10,23 @@ namespace PurenailCore.RandoUtil
 
         public const float DEFAULT_PRIORITY = 100f;
 
-        public static bool DefaultTester(GenerationSettings gs) => true;
-
         public static void Setup(Tester tester, float priority)
         {
             RCData.RuntimeLogicOverride.Subscribe(priority, (gs, lmb) => ApplyLogicFix(tester, gs, lmb));
         }
 
-        private const string Gate1Proxy = "Crossroads_06_Proxy[right1]";
         private const string Gate1 = "Crossroads_06[right1]";
-        private const string Gate2Proxy = "Crossroads_10_Proxy[left1]";
+        private const string Gate1Proxy = "Crossroads_06_Proxy[right1]";
         private const string Gate2 = "Crossroads_10[left1]";
+        private const string Gate2Proxy = "Crossroads_10_Proxy[left1]";
 
         public static void ApplyLogicFix(Tester tester, GenerationSettings gs, LogicManagerBuilder lmb)
         {
             // Don't apply the fix twice.
             if (!tester(gs) || lmb.LogicLookup.ContainsKey(Gate1Proxy)) return;
 
-            lmb.AddWaypoint(new(Gate1Proxy, lmb.LogicLookup[Gate1].ToInfix()));
-            lmb.AddWaypoint(new(Gate2Proxy, lmb.LogicLookup[Gate2].ToInfix()));
-            lmb.DoLogicEdit(new(Gate1, "FALSE"));
-            lmb.DoLogicEdit(new(Gate2, "FALSE"));
+            lmb.AddWaypoint(new(Gate1Proxy, $"({lmb.LogicLookup[Gate1].ToInfix()}) + ROOMRANDO"));
+            lmb.AddWaypoint(new(Gate2Proxy, $"({lmb.LogicLookup[Gate2].ToInfix()}) + ROOMRANDO"));
 
             LogicReplacer replacer = new();
             replacer.IgnoredNames.Add(Gate1);
