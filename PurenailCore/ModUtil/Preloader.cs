@@ -1,31 +1,55 @@
 ﻿using PurenailCore.SystemUtil;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace PurenailCore.ModUtil
 {
-    // Add these as members on a subclass of Preloader. Then, hook Preloader into the related Mod class methods.
-    public class PreloadedObject
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    public class Preload : Attribute
     {
-        public PreloadedObject(Preloader preloader, string sceneName, string objName) => preloader.Add(this, sceneName, objName);
-
-        private GameObject gameObject;
-
-        public void Init(GameObject gameObject) => this.gameObject = gameObject;
-
-        public GameObject Instantiate() => GameObject.Instantiate(gameObject);
+        public readonly string SceneName;
+        public readonly string ObjectName;
     }
 
+    // Subclass this class with your own Preloader type.
+    // Then, add methods like this:
+    //
+    //   [Preload("Tutorial_01", "Thingy")]
+    //   public GameObject thingy;
+    //
+    // Make sure your Mod invokes GetPreloadNames() and Initialize(...) appropriately.
     public class Preloader
     {
-        private Dictionary<string, Dictionary<string, List<PreloadedObject>>> preloads = new();
+        private Dictionary<string, Dictionary<string, List<PropertyInfo>>> _props;
+        private Dictionary<string, Dictionary<string, List<PropertyInfo>>> Props
+        {
+            get
+            {
+                if (_props != null) return _props;
 
-        public void Add(PreloadedObject pObj, string sceneName, string objName) => preloads.GetOrCreateNew(sceneName).GetOrCreateNew(objName).Add(pObj);
+                _props = new();
+                var props = GetType().GetProperties().Where(p => p.IsDefined(typeof(Preload), false)).ToList();
+                foreach (var prop in props)
+                {
+                    var preload = prop.GetCustomAttribute<Preload>();
+                    if (prop.PropertyType != typeof(GameObject))
+                    {
+                        throw new ArgumentException($"Improper use of [Preload] attribute: Expected GameObject, but got {prop.PropertyType} on {prop.Name}");
+                    }
+                    _props.GetOrCreateNew(preload.SceneName).GetOrCreateNew(preload.ObjectName).Add(prop);
+                }
+                return _props;
+            }
+        }
 
         public List<(string, string)> GetPreloadNames()
         {
             List<(string, string)> l = new();
-            foreach (var e in preloads)
+            foreach (var e in Props)
             {
                 foreach (var objName in e.Value.Keys)
                 {
@@ -37,12 +61,12 @@ namespace PurenailCore.ModUtil
 
         public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
-            foreach (var e1 in preloads)
+            foreach (var e1 in Props)
             {
                 foreach (var e2 in e1.Value)
                 {
                     var obj = preloadedObjects[e1.Key][e2.Key];
-                    e2.Value.ForEach(p => p.Init(obj));
+                    e2.Value.ForEach(p => p.SetValue(this, obj));
                 }
             }
         }
