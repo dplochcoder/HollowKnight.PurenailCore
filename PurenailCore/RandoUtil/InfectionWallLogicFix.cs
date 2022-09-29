@@ -19,8 +19,8 @@ namespace PurenailCore.RandoUtil
             // Don't apply the fix twice.
             if (!tester(gs) || lmb.LogicLookup["Crossroads_06[right1]"].ToInfix().Contains("ROOMRANDO")) return;
 
-            lmb.DoLogicEdit(new("Crossroads_06[right1]", "ORIG + (ROOMRANDO | Crossroads_10[right1])"));
-            lmb.DoLogicEdit(new("Crossroads_10[left1]", "ORIG + (ROOMRANDO | Crossroads_06[left1] | Crossroads_06[door1])"));
+            lmb.DoLogicEdit(new("Crossroads_06[right1]", "ORIG + (ROOMRANDO | Crossroads_06[right1] | Crossroads_10[right1])"));
+            lmb.DoLogicEdit(new("Crossroads_10[left1]", "ORIG + (ROOMRANDO | Crossroads_10[left1] | Crossroads_06[left1] | Crossroads_06[door1])"));
         }
     }
 }
