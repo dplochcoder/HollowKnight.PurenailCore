@@ -45,7 +45,6 @@ namespace PurenailCore.ModUtil
                     var obj = preloadedObjects[e1.Key][e2.Key];
                     e2.Value.ForEach(p => p.Init(obj));
                 }
-
             }
         }
     }
