@@ -18,7 +18,7 @@ namespace PurenailCore.ModUtil
 
     public class Preloader
     {
-        private Dictionary<string, Dictionary<string, List<PreloadedObject>>> preloads;
+        private Dictionary<string, Dictionary<string, List<PreloadedObject>>> preloads = new();
 
         public void Add(PreloadedObject pObj, string sceneName, string objName) => preloads.GetOrCreateNew(sceneName).GetOrCreateNew(objName).Add(pObj);
 
