@@ -10,7 +10,6 @@ namespace PurenailCore.ModUtil
     {
         public PreloadedObject(Preloader preloader, string sceneName, string objName) => preloader.Add(this, sceneName, objName);
 
-
         private GameObject gameObject;
 
         public void Init(GameObject gameObject) => this.gameObject = gameObject;
