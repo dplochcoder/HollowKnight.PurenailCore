@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace PurenailCore.ModUtil
 {
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public class Preload : Attribute
     {
         public readonly string SceneName;
@@ -30,14 +30,28 @@ namespace PurenailCore.ModUtil
     // Make sure your Mod invokes GetPreloadNames() and Initialize(...) appropriately.
     public class Preloader
     {
-        private Dictionary<string, Dictionary<string, List<PropertyInfo>>> _props;
-        private Dictionary<string, Dictionary<string, List<PropertyInfo>>> Props
+        private class Target
+        {
+            public List<FieldInfo> Fields = new();
+            public List<PropertyInfo> Props = new();
+
+            public void SetValue(object obj, GameObject value)
+            {
+                Fields.ForEach(f => f.SetValue(obj, value));
+                Props.ForEach(p => p.SetValue(obj, value));
+            }
+        }
+
+        private Dictionary<string, Dictionary<string, Target>> _targets;
+
+        private Dictionary<string, Dictionary<string, Target>> Targets
         {
             get
             {
-                if (_props != null) return _props;
+                if (_targets != null) return _targets;
 
-                _props = new();
+                _targets = new();
+
                 var props = GetType().GetProperties().Where(p => p.IsDefined(typeof(Preload), false)).ToList();
                 foreach (var prop in props)
                 {
@@ -46,16 +60,28 @@ namespace PurenailCore.ModUtil
                     {
                         throw new ArgumentException($"Improper use of [Preload] attribute: Expected GameObject, but got {prop.PropertyType} on {prop.Name}");
                     }
-                    _props.GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName).Add(prop);
+                    _targets.GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName).Props.Add(prop);
                 }
-                return _props;
+
+                var fields = GetType().GetFields().Where(f => f.IsDefined(typeof(Preload), false)).ToList();
+                foreach (var field in fields)
+                {
+                    var preload = field.GetCustomAttribute<Preload>();
+                    if (field.FieldType != typeof(GameObject))
+                    {
+                        throw new ArgumentException($"Improper use of [Preload] attribute: Expected GameObject, but got {field.FieldType} on {field.Name}");
+                    }
+                    _targets.GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName).Fields.Add(field);
+                }
+
+                return _targets;
             }
         }
 
         public List<(string, string)> GetPreloadNames()
         {
             List<(string, string)> l = new();
-            foreach (var e in Props)
+            foreach (var e in Targets)
             {
                 foreach (var objName in e.Value.Keys)
                 {
@@ -67,12 +93,12 @@ namespace PurenailCore.ModUtil
 
         public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
-            foreach (var e1 in Props)
+            foreach (var e1 in Targets)
             {
                 foreach (var e2 in e1.Value)
                 {
                     var obj = preloadedObjects[e1.Key][e2.Key];
-                    e2.Value.ForEach(p => p.SetValue(this, obj));
+                    e2.Value.SetValue(this, obj);
                 }
             }
         }
