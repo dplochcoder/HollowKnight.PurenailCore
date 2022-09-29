@@ -13,6 +13,12 @@ namespace PurenailCore.ModUtil
     {
         public readonly string SceneName;
         public readonly string ObjectName;
+        
+        public Preload(string sceneName, string objectName)
+        {
+            this.SceneName = sceneName;
+            this.ObjectName = objectName;
+        }
     }
 
     // Subclass this class with your own Preloader type.

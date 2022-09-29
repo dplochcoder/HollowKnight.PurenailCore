@@ -6,6 +6,7 @@ namespace PurenailCore.SystemUtil
     public static class Extensions
     {
         public delegate V Supplier<V>();
+
         public static void AddIfEmpty<K, V>(this IDictionary<K, V> dict, K key, Supplier<V> creator)
         {
             if (!dict.ContainsKey(key))
@@ -32,7 +33,6 @@ namespace PurenailCore.SystemUtil
 
             return creator.Invoke();
         }
-
 
         public static void Shuffle<T>(this List<T> list, Random r)
         {
