@@ -40,7 +40,7 @@ namespace PurenailCore.ModUtil
                     {
                         throw new ArgumentException($"Improper use of [Preload] attribute: Expected GameObject, but got {prop.PropertyType} on {prop.Name}");
                     }
-                    _props.GetOrCreateNew(preload.SceneName).GetOrCreateNew(preload.ObjectName).Add(prop);
+                    _props.GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName).Add(prop);
                 }
                 return _props;
             }

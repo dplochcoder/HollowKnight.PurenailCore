@@ -14,7 +14,7 @@ namespace PurenailCore.SystemUtil
             }
         }
 
-        public static V GetOrCreateNew<K,V>(this IDictionary<K, V> self, K key) where V : new()
+        public static V GetOrAddNew<K,V>(this IDictionary<K, V> self, K key) where V : new()
         {
             if (self.TryGetValue(key, out V value)) return value;
 
