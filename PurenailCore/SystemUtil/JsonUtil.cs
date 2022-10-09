@@ -45,6 +45,12 @@ namespace PurenailCore.SystemUtil
             SerializerHolder._js.Serialize(sw, o);
         }
 
+        public static void Serialize(object o, TextWriter tw)
+        {
+            using JsonTextWriter jtw = new(tw) { CloseOutput = false };
+            SerializerHolder._js.Serialize(tw, o);
+        }
+
         public static void RewriteJsonFile<T>(T data, string path)
         {
             File.Delete(path);
