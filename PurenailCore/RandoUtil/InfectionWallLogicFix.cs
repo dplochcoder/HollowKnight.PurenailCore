@@ -9,6 +9,8 @@ namespace PurenailCore.RandoUtil
     {
         public delegate bool Tester(GenerationSettings gs);
 
+        private const string SENTINEL = "InfectionWallLogicFix";
+
         public static void Setup(Tester tester, float priority)
         {
             RCData.RuntimeLogicOverride.Subscribe(priority, (gs, lmb) => ApplyLogicFix(tester, gs, lmb));
@@ -17,10 +19,11 @@ namespace PurenailCore.RandoUtil
         public static void ApplyLogicFix(Tester tester, GenerationSettings gs, LogicManagerBuilder lmb)
         {
             // Don't apply the fix twice.
-            if (!tester(gs) || lmb.LogicLookup["Crossroads_06[right1]"].ToInfix().Contains("ROOMRANDO")) return;
+            if (!tester(gs) || lmb.LogicLookup.ContainsKey(SENTINEL)) return;
+            lmb.AddLogicDef(new(SENTINEL, "TRUE"));
 
             lmb.DoLogicEdit(new("Crossroads_06[right1]", "ORIG + (ROOMRANDO | Crossroads_06[right1] | Crossroads_10[right1])"));
-            lmb.DoLogicEdit(new("Crossroads_10[left1]", "ORIG + (ROOMRANDO | Crossroads_10[left1] | Crossroads_06[left1] | Crossroads_06[door1])"));
+            lmb.DoLogicEdit(new("Crossroads_10[left1]", "ORIG + (ROOMRANDO | Crossroads_10[left1] | Crossroads_06[door1] | Crossroads_33[top1])"));
         }
     }
 }
