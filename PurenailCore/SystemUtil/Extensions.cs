@@ -44,5 +44,13 @@ namespace PurenailCore.SystemUtil
                 list[j] = temp;
             }
         }
+
+        public static void ForEach<T>(this IEnumerable<T> iter, Action<T> action)
+        {
+            foreach (var t in iter)
+            {
+                action(t);
+            }
+        }
     }
 }
