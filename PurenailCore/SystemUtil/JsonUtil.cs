@@ -39,6 +39,13 @@ namespace PurenailCore.SystemUtil
             return SerializerHolder._js.Deserialize<T>(jtr);
         }
 
+        public static T DeserializeFromString<T>(string data)
+        {
+            using StringReader sr = new(data);
+            using JsonTextReader jtr = new(sr);
+            return SerializerHolder._js.Deserialize<T>(jtr);
+        }
+
         public static void Serialize(object o, string fileName)
         {
             using StreamWriter sw = new(File.OpenWrite(Path.Combine(Path.GetDirectoryName(asm.Location), fileName)));
