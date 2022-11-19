@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace PurenailCore.ModUtil
 {
@@ -20,12 +21,20 @@ namespace PurenailCore.ModUtil
             return sum;
         }
 
-        public static string ComputeVersion<T>()
+        private static int HashFile(string path)
+        {
+            var sha1 = System.Security.Cryptography.SHA1.Create();
+            var bytes = sha1.ComputeHash(File.OpenRead(path));
+            return HashBytes(bytes);
+        }
+
+        public static string ComputeVersion<T>(List<string>? extraFiles = null)
         {
             var asm = typeof(T).Assembly;
-            var sha1 = System.Security.Cryptography.SHA1.Create();
-            var bytes = sha1.ComputeHash(File.OpenRead(asm.Location));
-            int sum = HashBytes(bytes);
+            int sum = HashFile(asm.Location);
+
+            foreach (var f in extraFiles ?? new()) sum += HashFile(f);
+            sum %= 997;
 
             System.Version v = asm.GetName().Version;
             return $"{v.Major}.{v.Minor}.{v.Build}+{sum.ToString().PadLeft(3, '0')}";
