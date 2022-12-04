@@ -28,7 +28,9 @@ namespace PurenailCore.ModUtil
             return HashBytes(bytes);
         }
 
-        public static string ComputeVersion<T>(List<string>? extraFiles = null)
+        public static string ComputeVersion<T>() => ComputeVersion<T>(new());
+
+        public static string ComputeVersion<T>(List<string> extraFiles)
         {
             var asm = typeof(T).Assembly;
             int sum = HashFile(asm.Location);
