@@ -87,7 +87,7 @@
       <HintPath>$(HollowKnightRefs)/Mods/RandomizerCore/RandomizerCore.dll</HintPath>
     </Reference>
     <Reference Include="RandomizerMod">
-      <HintPath>$(HollowKnightRefs)/Mods/Randomizer 4/RandomizerMod.dll</HintPath>
+      <HintPath>$(HollowKnightRefs)/Mods/RandomizerMod/RandomizerMod.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.Composition">
       <HintPath>$(HollowKnightRefs)/System.ComponentModel.Composition.dll</HintPath>

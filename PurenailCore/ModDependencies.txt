@@ -1,2 +1,2 @@
-Randomizer 4
 RandomizerCore
+RandomizerMod
