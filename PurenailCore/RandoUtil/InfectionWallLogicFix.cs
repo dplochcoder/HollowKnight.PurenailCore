@@ -22,10 +22,8 @@ namespace PurenailCore.RandoUtil
             if (!tester(gs) || lmb.LogicLookup.ContainsKey(SENTINEL)) return;
             lmb.AddLogicDef(new(SENTINEL, "TRUE"));
 
-            const string bothSidesProxy = "(Crossroads_06[door1] | Crossroads_06[left1]) + Defeated_False_Knight";
-
-            lmb.DoLogicEdit(new("Crossroads_06[right1]", $"ORIG + (ROOMRANDO | ${bothSidesProxy})"));
-            lmb.DoLogicEdit(new("Crossroads_10[left1]", $"ORIG + (ROOMRANDO | ${bothSidesProxy})"));
+            lmb.DoLogicEdit(new("Crossroads_06[right1]", "ORIG + (ROOMRANDO | (Crossroads_06[door1] | Crossroads_06[left1]) + Crossroads_10[right1] + Defeated_False_Knight)"));
+            lmb.DoLogicEdit(new("Crossroads_10[left1]", "ORIG + (ROOMRANDO | (Crossroads_06[door1] | Crossroads_06[left1]) + Crossroads_10[right1] + Defeated_False_Knight)"));
         }
     }
 }
