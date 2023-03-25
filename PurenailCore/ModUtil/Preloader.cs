@@ -59,7 +59,7 @@ namespace PurenailCore.ModUtil
     //   [Preload("Tutorial_01", "Thingy")]
     //   public GameObject thingy;
     //
-    // Make sure your Mod invokes GetPreloadNames() and Initialize(...) appropriately.
+    // Make sure your Mod invokes GetPreloadNames(), PreloadSceneHooks(), and Initialize(...) appropriately.
     public class Preloader
     {
         private class Target
@@ -182,8 +182,11 @@ namespace PurenailCore.ModUtil
             {
                 foreach (var e2 in e1.Value)
                 {
-                    var obj = preloadedObjects[e1.Key][e2.Key];
-                    e2.Value.SetValue(this, obj);
+                    if (!e2.Value.isPrefab)
+                    {
+                        var obj = preloadedObjects[e1.Key][e2.Key];
+                        e2.Value.SetValue(this, obj);
+                    }
                 }
             }
         }
