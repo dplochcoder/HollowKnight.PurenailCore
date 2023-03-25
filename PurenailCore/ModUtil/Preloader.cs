@@ -135,7 +135,7 @@ namespace PurenailCore.ModUtil
             return l;
         }
 
-        public List<(string, Func<IEnumerator>)> PreloadSceneHooks()
+        public (string, Func<IEnumerator>)[] PreloadSceneHooks()
         {
             List<(string, Func<IEnumerator>)> l = new();
             foreach (var e in Targets)
@@ -173,7 +173,7 @@ namespace PurenailCore.ModUtil
                     l.Add((sceneName, SaveAssets));
                 }
             }
-            return l;
+            return l.ToArray();
         }
 
         public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
