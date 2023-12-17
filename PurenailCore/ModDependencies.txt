@@ -1,2 +1,3 @@
 RandomizerCore
 Randomizer 4
+ItemChanger
