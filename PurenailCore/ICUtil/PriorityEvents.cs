@@ -1,32 +1,31 @@
 ﻿using RandomizerMod;
 
-namespace PurenailCore.ICUtil
+namespace PurenailCore.ICUtil;
+
+public static class PriorityEvents
 {
-    public static class PriorityEvents
+    public static void Setup()
     {
-        public static void Setup()
+        On.SceneManager.Start += OnSceneManagerStart;
+    }
+
+    public delegate void UpdateSceneManager(SceneManager sm);
+
+    public static readonly PriorityEvent<UpdateSceneManager> BeforeSceneManagerStart = new(out _beforeSceneManagerStartOwner);
+    private static readonly PriorityEvent<UpdateSceneManager>.IPriorityEventOwner _beforeSceneManagerStartOwner;
+    public static readonly PriorityEvent<UpdateSceneManager> AfterSceneManagerStart = new(out _afterSceneManagerStartOwner);
+    private static readonly PriorityEvent<UpdateSceneManager>.IPriorityEventOwner _afterSceneManagerStartOwner;
+
+    private static void OnSceneManagerStart(On.SceneManager.orig_Start orig, SceneManager self)
+    {
+        foreach (var updater in _beforeSceneManagerStartOwner.GetSubscribers())
         {
-            On.SceneManager.Start += OnSceneManagerStart;
+            updater(self);
         }
-
-        public delegate void UpdateSceneManager(SceneManager sm);
-
-        public static readonly PriorityEvent<UpdateSceneManager> BeforeSceneManagerStart = new(out _beforeSceneManagerStartOwner);
-        private static readonly PriorityEvent<UpdateSceneManager>.IPriorityEventOwner _beforeSceneManagerStartOwner;
-        public static readonly PriorityEvent<UpdateSceneManager> AfterSceneManagerStart = new(out _afterSceneManagerStartOwner);
-        private static readonly PriorityEvent<UpdateSceneManager>.IPriorityEventOwner _afterSceneManagerStartOwner;
-
-        private static void OnSceneManagerStart(On.SceneManager.orig_Start orig, SceneManager self)
+        orig(self);
+        foreach (var updater in _afterSceneManagerStartOwner.GetSubscribers())
         {
-            foreach (var updater in _beforeSceneManagerStartOwner.GetSubscribers())
-            {
-                updater(self);
-            }
-            orig(self);
-            foreach (var updater in _afterSceneManagerStartOwner.GetSubscribers())
-            {
-                updater(self);
-            }
+            updater(self);
         }
     }
 }
