@@ -12,7 +12,6 @@ internal interface IPreload
 {
     public string SceneName { get; }
     public string ObjectName { get; }
-    public Type PreloadType { get; }
     public bool IsPrefab { get; }
 }
 
@@ -33,11 +32,8 @@ public class Preload : Attribute, IPreload
     string IPreload.SceneName => SceneName;
 
     string IPreload.ObjectName => ObjectName;
-
-    Type IPreload.PreloadType => typeof(GameObject);
 }
 
-[Obsolete("Use TypedPrefabPreload instead")]
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
 public class PrefabPreload : Attribute, IPreload
 {
@@ -54,30 +50,6 @@ public class PrefabPreload : Attribute, IPreload
     string IPreload.SceneName => SceneName;
 
     string IPreload.ObjectName => ObjectName;
-
-    Type IPreload.PreloadType => typeof(GameObject);
-}
-
-internal interface ITypedPrefabPreload : IPreload { }
-
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
-public class TypedPrefabPreload<T> : Attribute, ITypedPrefabPreload
-{
-    public readonly string SceneName;
-    public readonly string ObjectName;
-    public TypedPrefabPreload(string sceneName, string objectName)
-    {
-        this.SceneName = sceneName;
-        this.ObjectName = objectName;
-    }
-
-    public bool IsPrefab => true;
-
-    string IPreload.SceneName => SceneName;
-
-    string IPreload.ObjectName => ObjectName;
-
-    Type IPreload.PreloadType => typeof(T);
 }
 
 // Subclass this class with your own Preloader type.
@@ -117,10 +89,10 @@ public class Preloader
                 IPreload? preload = prop.GetCustomAttributes(false).Where(attr => attr is IPreload).FirstOrDefault() as IPreload;
                 if (preload == null) continue;
 
-                if (prop.PropertyType != preload.PreloadType)
-                    throw new ArgumentException($"Improper use of [Preload] attribute: Expected {preload.PreloadType}, but got {prop.PropertyType} on {prop.Name}");
+                if (!typeof(UnityEngine.Object).IsAssignableFrom(prop.PropertyType))
+                    throw new ArgumentException($"Improper use of [Preload] attribute: Type {prop.PropertyType} is not a UnityEngine.Object type");
 
-                var target = _targets.GetOrAddNew(preload.PreloadType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
+                var target = _targets.GetOrAddNew(prop.PropertyType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
                 target.isPrefab = preload.IsPrefab;
                 target.Props.Add(prop);
             }
@@ -130,10 +102,10 @@ public class Preloader
                 IPreload? preload = field.GetCustomAttributes(false).Where(attr => attr is IPreload).FirstOrDefault() as IPreload;
                 if (preload == null) continue;
 
-                if (field.FieldType != typeof(GameObject))
-                    throw new ArgumentException($"Improper use of [Preload] attribute: Expected GameObject, but got {field.FieldType} on {field.Name}");
+                if (!typeof(UnityEngine.Object).IsAssignableFrom(field.FieldType))
+                    throw new ArgumentException($"Improper use of [Preload] attribute: Type {field.FieldType} is not a UnityEngine.Object type");
 
-                var target = _targets.GetOrAddNew(preload.PreloadType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
+                var target = _targets.GetOrAddNew(field.FieldType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
                 target.isPrefab = preload.IsPrefab;
                 target.Fields.Add(field);
             }
