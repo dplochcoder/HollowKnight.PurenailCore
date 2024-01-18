@@ -4,15 +4,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace PurenailCore.ModUtil;
 
-public interface IPreload
+internal interface IPreload
 {
     public string SceneName { get; }
     public string ObjectName { get; }
+    public Type PreloadType { get; }
     public bool IsPrefab { get; }
 }
 
@@ -33,8 +33,11 @@ public class Preload : Attribute, IPreload
     string IPreload.SceneName => SceneName;
 
     string IPreload.ObjectName => ObjectName;
+
+    Type IPreload.PreloadType => typeof(GameObject);
 }
 
+[Obsolete("Use TypedPrefabPreload instead")]
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
 public class PrefabPreload : Attribute, IPreload
 {
@@ -51,6 +54,30 @@ public class PrefabPreload : Attribute, IPreload
     string IPreload.SceneName => SceneName;
 
     string IPreload.ObjectName => ObjectName;
+
+    Type IPreload.PreloadType => typeof(GameObject);
+}
+
+internal interface ITypedPrefabPreload : IPreload { }
+
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
+public class TypedPrefabPreload<T> : Attribute, ITypedPrefabPreload
+{
+    public readonly string SceneName;
+    public readonly string ObjectName;
+    public TypedPrefabPreload(string sceneName, string objectName)
+    {
+        this.SceneName = sceneName;
+        this.ObjectName = objectName;
+    }
+
+    public bool IsPrefab => true;
+
+    string IPreload.SceneName => SceneName;
+
+    string IPreload.ObjectName => ObjectName;
+
+    Type IPreload.PreloadType => typeof(T);
 }
 
 // Subclass this class with your own Preloader type.
@@ -68,16 +95,16 @@ public class Preloader
         public List<FieldInfo> Fields = new();
         public List<PropertyInfo> Props = new();
 
-        public void SetValue(object obj, GameObject value)
+        public void SetValue(object obj, UnityEngine.Object value)
         {
             Fields.ForEach(f => f.SetValue(obj, value));
             Props.ForEach(p => p.SetValue(obj, value));
         }
     }
 
-    private Dictionary<string, Dictionary<string, Target>> _targets;
+    private Dictionary<Type, Dictionary<string, Dictionary<string, Target>>> _targets;
 
-    private Dictionary<string, Dictionary<string, Target>> Targets
+    private Dictionary<Type, Dictionary<string, Dictionary<string, Target>>> Targets
     {
         get
         {
@@ -85,32 +112,28 @@ public class Preloader
 
             _targets = new();
 
-            var props = GetType().GetProperties()
-                .Where(p => p.IsDefined(typeof(Preload), false) || p.IsDefined(typeof(PrefabPreload), false))
-                .ToList();
-            foreach (var prop in props)
+            foreach (var prop in GetType().GetProperties())
             {
-                var preload = (IPreload)prop.GetCustomAttribute<Preload>() ?? (IPreload)prop.GetCustomAttribute<PrefabPreload>();
-                if (prop.PropertyType != typeof(GameObject))
-                {
-                    throw new ArgumentException($"Improper use of [Preload] attribute: Expected GameObject, but got {prop.PropertyType} on {prop.Name}");
-                }
-                var target = _targets.GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
+                IPreload? preload = prop.GetCustomAttributes(false).Where(attr => attr is IPreload).First() as IPreload;
+                if (preload == null) continue;
+
+                if (prop.PropertyType != preload.PreloadType)
+                    throw new ArgumentException($"Improper use of [Preload] attribute: Expected {preload.PreloadType}, but got {prop.PropertyType} on {prop.Name}");
+
+                var target = _targets.GetOrAddNew(preload.PreloadType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
                 target.isPrefab = preload.IsPrefab;
                 target.Props.Add(prop);
             }
 
-            var fields = GetType().GetFields()
-                .Where(f => f.IsDefined(typeof(Preload), false) || f.IsDefined(typeof(PrefabPreload), false))
-                .ToList();
-            foreach (var field in fields)
+            foreach (var field in GetType().GetFields())
             {
-                var preload = (IPreload)field.GetCustomAttribute<Preload>() ?? (IPreload)field.GetCustomAttribute<PrefabPreload>();
+                IPreload? preload = field.GetCustomAttributes(false).Where(attr => attr is IPreload).First() as IPreload;
+                if (preload == null) continue;
+
                 if (field.FieldType != typeof(GameObject))
-                {
                     throw new ArgumentException($"Improper use of [Preload] attribute: Expected GameObject, but got {field.FieldType} on {field.Name}");
-                }
-                var target = _targets.GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
+
+                var target = _targets.GetOrAddNew(preload.PreloadType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
                 target.isPrefab = preload.IsPrefab;
                 target.Fields.Add(field);
             }
@@ -122,55 +145,49 @@ public class Preloader
     public List<(string, string)> GetPreloadNames()
     {
         List<(string, string)> l = new();
-        foreach (var e in Targets)
-        {
-            foreach (var e2 in e.Value)
-            {
-                if (!e2.Value.isPrefab)
-                {
-                    l.Add((e.Key, e2.Key));
-                }
-            }
-        }
+        if (!Targets.TryGetValue(typeof(GameObject), out var dict)) return l;
+
+        foreach (var e1 in dict) foreach (var e2 in e1.Value) if (!e2.Value.isPrefab) l.Add((e1.Key, e2.Key));
         return l;
     }
 
     public (string, Func<IEnumerator>)[] PreloadSceneHooks()
     {
         List<(string, Func<IEnumerator>)> l = new();
-        foreach (var e in Targets)
+        foreach (var e1 in Targets)
         {
-            var sceneName = e.Key;
-            List<string> objNames = new();
-            foreach (var e2 in e.Value)
+            var type = e1.Key;
+            foreach (var e2 in e1.Value)
             {
-                var objName = e2.Key;
-                var target = e2.Value;
-                if (target.isPrefab)
+                var sceneName = e2.Key;
+                List<string> objNames = new();
+                foreach (var e3 in e2.Value)
                 {
-                    objNames.Add(objName);
+                    var objName = e3.Key;
+                    var target = e3.Value;
+                    if (target.isPrefab) objNames.Add(objName);
                 }
-            }
 
-            if (objNames.Count > 0)
-            {
-                IEnumerator SaveAssets()
+                if (objNames.Count > 0)
                 {
-                    var sceneMap = Targets[sceneName];
-                    foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>())
+                    IEnumerator SaveAssets()
                     {
-                        if (sceneMap.TryGetValue(go.name, out var target))
+                        var sceneMap = Targets[type][sceneName];
+                        foreach (var obj in Resources.FindObjectsOfTypeAll(type))
                         {
-                            var prefab = UnityEngine.Object.Instantiate(go);
-                            UnityEngine.Object.DontDestroyOnLoad(prefab);
-                            prefab.SetActive(false);
-                            prefab.name = go.name;
-                            target.SetValue(this, prefab);
+                            if (sceneMap.TryGetValue(obj.name, out var target))
+                            {
+                                var prefab = UnityEngine.Object.Instantiate(obj);
+                                UnityEngine.Object.DontDestroyOnLoad(prefab);
+                                if (prefab is GameObject go) go.SetActive(false);
+                                prefab.name = obj.name;
+                                target.SetValue(this, prefab);
+                            }
                         }
+                        yield break;
                     }
-                    yield break;
+                    l.Add((sceneName, SaveAssets));
                 }
-                l.Add((sceneName, SaveAssets));
             }
         }
         return l.ToArray();
@@ -178,7 +195,9 @@ public class Preloader
 
     public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
-        foreach (var e1 in Targets)
+        if (!Targets.TryGetValue(typeof(GameObject), out var dict)) return;
+
+        foreach (var e1 in dict)
         {
             foreach (var e2 in e1.Value)
             {
