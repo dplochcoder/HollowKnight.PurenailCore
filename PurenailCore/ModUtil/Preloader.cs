@@ -114,7 +114,7 @@ public class Preloader
 
             foreach (var prop in GetType().GetProperties())
             {
-                IPreload? preload = prop.GetCustomAttributes(false).Where(attr => attr is IPreload).First() as IPreload;
+                IPreload? preload = prop.GetCustomAttributes(false).Where(attr => attr is IPreload).FirstOrDefault() as IPreload;
                 if (preload == null) continue;
 
                 if (prop.PropertyType != preload.PreloadType)
@@ -127,7 +127,7 @@ public class Preloader
 
             foreach (var field in GetType().GetFields())
             {
-                IPreload? preload = field.GetCustomAttributes(false).Where(attr => attr is IPreload).First() as IPreload;
+                IPreload? preload = field.GetCustomAttributes(false).Where(attr => attr is IPreload).FirstOrDefault() as IPreload;
                 if (preload == null) continue;
 
                 if (field.FieldType != typeof(GameObject))
