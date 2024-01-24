@@ -1,3 +1,4 @@
 RandomizerCore
 Randomizer 4
 ItemChanger
+RandomizerCore.Json

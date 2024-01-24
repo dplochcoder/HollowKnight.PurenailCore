@@ -1,6 +1,6 @@
 ﻿using Modding;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using RandomizerCore.Json;
 using System.IO;
 using System.Reflection;
 
@@ -9,6 +9,8 @@ namespace PurenailCore.SystemUtil;
 public class JsonUtil<M> where M : Mod
 {
     private static readonly Assembly asm = typeof(M).Assembly;
+
+    private static readonly JsonSerializer serializer = JsonUtil.GetNonLogicSerializer();
 
     public static string InferGitRoot()
     {
@@ -25,59 +27,23 @@ public class JsonUtil<M> where M : Mod
         return path;
     }
 
-    public static T DeserializeEmbedded<T>(string embeddedResourcePath)
-    {
-        using StreamReader sr = new(asm.GetManifestResourceStream(embeddedResourcePath));
-        using JsonTextReader jtr = new(sr);
-        return SerializerHolder._js.Deserialize<T>(jtr);
-    }
+    public static T DeserializeEmbedded<T>(string embeddedResourcePath) where T : class => JsonUtil.DeserializeFromEmbeddedResource<T>(asm, embeddedResourcePath);
 
-    public static T DeserializeFromPath<T>(string path)
-    {
-        using StreamReader sr = new(path);
-        using JsonTextReader jtr = new(sr);
-        return SerializerHolder._js.Deserialize<T>(jtr);
-    }
+    public static T DeserializeFromPath<T>(string path) where T : class => JsonUtil.DeserializeFromFile<T>(path);
 
-    public static T DeserializeFromString<T>(string data)
-    {
-        using StringReader sr = new(data);
-        using JsonTextReader jtr = new(sr);
-        return SerializerHolder._js.Deserialize<T>(jtr);
-    }
+    public static T DeserializeFromString<T>(string data) where T : class => serializer.DeserializeFromString<T>(data);
 
-    public static void Serialize(object o, string fileName)
+    public static void Serialize(object o, string fileName) 
     {
         using StreamWriter sw = new(File.OpenWrite(Path.Combine(Path.GetDirectoryName(asm.Location), fileName)));
-        SerializerHolder._js.Serialize(sw, o);
+        serializer.Serialize(sw, o);
     }
 
-    public static void Serialize(object o, TextWriter tw)
-    {
-        using JsonTextWriter jtw = new(tw) { CloseOutput = false };
-        SerializerHolder._js.Serialize(tw, o);
-    }
+    public static void Serialize(object o, TextWriter tw) => serializer.Serialize(tw, o);
 
     public static void RewriteJsonFile<T>(T data, string path)
     {
         File.Delete(path);
         Serialize(data, path);
-    }
-}
-
-internal static class SerializerHolder
-{
-    internal static readonly JsonSerializer _js;
-
-    static SerializerHolder()
-    {
-        _js = new JsonSerializer
-        {
-            DefaultValueHandling = DefaultValueHandling.Include,
-            Formatting = Formatting.Indented,
-            TypeNameHandling = TypeNameHandling.Auto,
-        };
-
-        _js.Converters.Add(new StringEnumConverter());
     }
 }
