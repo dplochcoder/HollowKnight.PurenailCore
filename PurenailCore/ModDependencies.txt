@@ -1,4 +1,4 @@
 ItemChanger
-https://github.com/homothetyhk/RandomizerCore/releases/download/v2.0.0/RandomizerCore.zip
-https://github.com/homothetyhk/RandomizerCore.Json/releases/download/v1.0.0/RandomizerCore.Json.zip
-https://github.com/homothetyhk/RandomizerMod/releases/download/v4.1.4%2B470/RandomizerMod.zip
+RandomizerCore from https://github.com/homothetyhk/RandomizerCore/releases/download/v2.0.0/RandomizerCore.zip
+RandomizerCore.Json from https://github.com/homothetyhk/RandomizerCore.Json/releases/download/v1.0.0/RandomizerCore.Json.zip
+Randomizer 4 from https://github.com/homothetyhk/RandomizerMod/releases/download/v4.1.4%2B470/RandomizerMod.zip
