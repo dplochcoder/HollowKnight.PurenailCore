@@ -60,11 +60,16 @@ internal class SpicyBrettaController : MonoBehaviour
 {
     private GameObject knight;
     private GameObject? mushroomRoller;
+    private PlayMakerFSM? dnailFsm;
 
     private void Awake()
     {
         knight = HeroController.instance.gameObject;
         mushroomRoller = GameObject.Find("Mushroom Roller");
+
+        var fsm = knight.LocateMyFSM("Dream Nail");
+        fsm.GetState("Can Set?").AddFirstAction(new Lambda(() => fsm.SendEvent("FAIL")));
+        dnailFsm = fsm;
 
         SpawnObjects();
     }
@@ -187,6 +192,7 @@ internal class SpicyBrettaController : MonoBehaviour
     private void OnDestroy()
     {
         if (bossLoaded) UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("Fungus3_23_boss");
+        dnailFsm?.GetState("Can Set?").RemoveFirstActionOfType<Lambda>();
     }
 
     private const float TRAITOR_X1 = 6f;
