@@ -55,6 +55,7 @@ internal class TraitorLordExpandedVision : MonoBehaviour
 // TODO: Move to a standalone mod after hk7y
 internal class SpicyBrettaController : MonoBehaviour
 {
+    public Scene scene;
     private GameObject knight;
     private GameObject? mushroomRoller;
     private PlayMakerFSM? dnailFsm;
@@ -62,7 +63,7 @@ internal class SpicyBrettaController : MonoBehaviour
     private void Awake()
     {
         knight = HeroController.instance.gameObject;
-        mushroomRoller = GameObject.Find("Mushroom Roller");
+        mushroomRoller = scene.FindGameObject("Mushroom Roller");
 
         SpawnObjects();
     }
@@ -110,7 +111,7 @@ internal class SpicyBrettaController : MonoBehaviour
         Spawn(pre.HiveWall, new(53.5f, 55));
         Spawn(Preloader.Instance.Belfly, new(65, 65.1f));
 
-        var squishTurret = GameObject.Find("Mushroom Turret");
+        var squishTurret = scene.FindGameObject("Mushroom Turret");
         squishTurret.transform.SetPositionX(18);
         var mawlek = Spawn(pre.BroodingMawlek, new(18, 44.2f, 2.4f));
         var mawlekCtrl = mawlek.LocateMyFSM("Mawlek Control");
@@ -307,7 +308,9 @@ internal class SpicyBrettaModule : ItemChanger.Modules.Module
         if (!hasClaw) return;
 
         var controller = new GameObject("SpicyBrettaController");
-        controller.AddComponent<SpicyBrettaController>();
+        controller.SetActive(false);
+        controller.AddComponent<SpicyBrettaController>().scene = scene;
+        controller.SetActive(true);
     }
 
     private string LoreText(bool hasClaw) => hasClaw ? "You should have come here before you found the Claw." : "The warrior's claw invites challenge. You'd best save the maiden without it.";
