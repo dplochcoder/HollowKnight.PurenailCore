@@ -1,13 +1,59 @@
 ﻿using GlobalEnums;
+using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using ItemChanger;
 using ItemChanger.Extensions;
+using ItemChanger.FsmStateActions;
 using Modding;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace PurenailCore.ICUtil;
+
+internal class TraitorLordExpandedVision : MonoBehaviour
+{
+    private GameObject knight;
+    private FsmBool facingRight;
+    private FsmBool frontCheck;
+    private FsmBool backCheck;
+    private FsmBool walkCheck;
+
+    private void Awake()
+    {
+        knight = HeroController.instance.gameObject;
+
+        var fsm = gameObject.LocateMyFSM("Mantis");
+        var vars = fsm.FsmVariables;
+        facingRight = vars.GetFsmBool("Facing Right");
+        frontCheck = vars.GetFsmBool("Front Range");
+        backCheck = vars.GetFsmBool("Back Range");
+        walkCheck = vars.GetFsmBool("Walk Range");
+    }
+
+    private const float TRAITOR_RANGE = 12;
+
+    private void Update()
+    {
+        walkCheck.Value = true;
+
+        var x = gameObject.transform.position.x;
+        var kx = knight.transform.position.x;
+        float dx = kx - x;
+        var right = facingRight.Value;
+
+        if (right)
+        {
+            frontCheck.Value = dx >= 0 && dx <= TRAITOR_RANGE;
+            backCheck.Value = dx >= -TRAITOR_RANGE && dx <= 0;
+        }
+        else
+        {
+            frontCheck.Value = dx >= -TRAITOR_RANGE && dx <= 0;
+            backCheck.Value = dx >= 0 && dx <= TRAITOR_RANGE;
+        }
+    }
+}
 
 // TODO: Move to a standalone mod after hk7y
 internal class SpicyBrettaController : MonoBehaviour
@@ -66,9 +112,15 @@ internal class SpicyBrettaController : MonoBehaviour
         Spawn(pre.HiveWall, new(53.5f, 55));
         Spawn(Preloader.Instance.Belfly, new(65, 65.1f));
 
-        Destroy(GameObject.Find("Mushroom Turret"));
+        var squishTurret = GameObject.Find("Mushroot Turret");
+        squishTurret.transform.SetPositionX(44.2f);
         var mawlek = Spawn(pre.BroodingMawlek, new(18, 44.2f, 2.4f));
-        mawlek.LocateMyFSM("Mawlek Control").GetState("Title").GetFirstActionOfType<SetFsmString>().setValue = "BRETTEK";
+        var mawlekCtrl = mawlek.LocateMyFSM("Mawlek Control");
+        mawlekCtrl.GetState("Wake Land").AddLastAction(new Lambda(() =>
+        {
+            squishTurret.GetComponent<HealthManager>().ApplyExtraDamage(999);
+        }));
+        mawlekCtrl.GetState("Title").GetFirstActionOfType<SetFsmString>().setValue = "BRETTEK";
 
         gate = Spawn(pre.BattleGateVertical, new(42.5f, 5.7f));
         StartCoroutine(LazilySpawnTraitorLord());
@@ -150,6 +202,15 @@ internal class SpicyBrettaController : MonoBehaviour
             foreach (var action in state.GetActionsOfType<AudioPlayerOneShotSingle>()) action.spawnPoint.Value ??= audioSource;
     }
 
+    private void PatchTraitorLordSensors(GameObject traitor, PlayMakerFSM mantis)
+    {
+        traitor.FindChild("Back Range").SetActive(false);
+        traitor.FindChild("Front Range").SetActive(false);
+        traitor.FindChild("Walk Range").SetActive(false);
+
+        traitor.AddComponent<TraitorLordExpandedVision>();
+    }
+
     private IEnumerator LazilySpawnTraitorLord()
     {
         yield return 0;
@@ -194,6 +255,8 @@ internal class SpicyBrettaController : MonoBehaviour
         fsm.SetState("Fall");
 
         while (fsm.ActiveStateName == "Fall") yield return 0;
+        PatchTraitorLordSensors(traitor, fsm);
+
         mushroomRoller?.GetComponent<HealthManager>().ApplyExtraDamage(999);  // Squish
 
         gate.LocateMyFSM("BG Control").SendEvent("BG CLOSE");
