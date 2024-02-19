@@ -11,14 +11,13 @@ namespace PurenailCore.ICUtil;
 
 internal class ImmortalMylaController : MonoBehaviour
 {
+    public GameObject myla;
     private GameObject knight;
     private GameObject gate;
-    private GameObject myla;
 
     private void Awake()
     {
         knight = HeroController.instance.gameObject;
-        myla = GameObject.Find("Zombie Myla");
 
         gate = Instantiate(Preloader.Instance.BattleGateHorizontal);
         gate.transform.position = new(34.5f, 10.75f);
@@ -64,7 +63,7 @@ internal class ImmortalMylaModule : ItemChanger.Modules.Module
         if (!pd.GetBool(nameof(pd.hasSuperDash))) return;
 
         // Don't spawn if Myla is dead.
-        var myla = GameObject.Find("Zombie Myla");
+        var myla = scene.FindGameObject("Zombie Myla");
         var pbi = myla.GetComponent<PersistentBoolItem>();
         pbi.PreSetup();
         if (pbi.persistentBoolData.activated) return;
@@ -74,7 +73,7 @@ internal class ImmortalMylaModule : ItemChanger.Modules.Module
         Object.Destroy(scene.FindGameObject("_Scenery/plat_float_03"));
 
         GameObject controller = new("ImmortalMyla");
-        controller.AddComponent<ImmortalMylaController>();
+        controller.AddComponent<ImmortalMylaController>().myla = myla;
 
         myla.GetComponent<HealthManager>().hp = MYLA_HEALTH;
         myla.GetComponent<DamageHero>().damageDealt = 2;
