@@ -64,10 +64,6 @@ internal class SpicyBrettaController : MonoBehaviour
         knight = HeroController.instance.gameObject;
         mushroomRoller = GameObject.Find("Mushroom Roller");
 
-        var fsm = knight.LocateMyFSM("Dream Nail");
-        fsm.GetState("Can Set?").AddFirstAction(new Lambda(() => fsm.SendEvent("FAIL")));
-        dnailFsm = fsm;
-
         SpawnObjects();
     }
 
@@ -259,10 +255,14 @@ internal class SpicyBrettaController : MonoBehaviour
 
         while (fsm.ActiveStateName == "Fall") yield return 0;
         PatchTraitorLordSensors(traitor, fsm);
-
         mushroomRoller?.GetComponent<HealthManager>().ApplyExtraDamage(999);  // Squish
 
         gate.LocateMyFSM("BG Control").SendEvent("BG CLOSE");
+
+        // Disable dgate after Traitor Lord spawn.
+        var kFsm = knight.LocateMyFSM("Dream Nail");
+        kFsm.GetState("Can Set?").AddFirstAction(new Lambda(() => kFsm.SendEvent("FAIL")));
+        dnailFsm = kFsm;
     }
 
     private bool IsMushroomAwake()
