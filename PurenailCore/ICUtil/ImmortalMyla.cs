@@ -1,4 +1,5 @@
 ﻿using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using ItemChanger;
 using ItemChanger.Extensions;
 using ItemChanger.FsmStateActions;
@@ -44,6 +45,9 @@ internal class ImmortalMylaModule : ItemChanger.Modules.Module
 
     public override void Unload() => Events.RemoveSceneChangeEdit("Crossroads_45", MakeMylaImmortal);
 
+    private const float RUN_SPEED = 12.5f;
+    private const float SLASH_ANTIC_SPEEDUP = 0.34f;
+
     private void MakeMylaImmortal(Scene scene)
     {
         var pd = PlayerData.instance;
@@ -58,18 +62,31 @@ internal class ImmortalMylaModule : ItemChanger.Modules.Module
         myla.FindChild("Slash").GetComponent<DamageHero>().damageDealt = 4;
 
         var walker = myla.GetComponent<Walker>();
-        walker.walkSpeedL = -9f;
-        walker.walkSpeedR = 9f;
+        walker.walkSpeedL = -RUN_SPEED;
+        walker.walkSpeedR = RUN_SPEED;
 
         var fsm = myla.LocateMyFSM("Zombie Miner");
         fsm.FsmVariables.GetFsmFloat("Evade Speed").Value = 22.5f;
-        fsm.FsmVariables.GetFsmFloat("Run Speed").Value = 13.5f;
+        fsm.FsmVariables.GetFsmFloat("Run Speed").Value = RUN_SPEED;
         fsm.FsmVariables.GetFsmFloat("Slash Speed").Value = 16f;
+
+        // Throw pickaxes unconditionally.
+        fsm.GetState("Attack Antic").GetFirstActionOfType<BoolTest>().isTrue = new("");
+
+        // Speed up slash attack.
+        var slashAntic = fsm.GetState("Slash Antic");
+        slashAntic.AddLastAction(new Lambda(() =>
+        {
+            var animator = myla.GetComponent<tk2dSpriteAnimator>();
+            animator.PlayFrom("Slash Antic", SLASH_ANTIC_SPEEDUP);
+        }));
 
         var pickaxe = fsm.FsmVariables.GetFsmGameObject("Pickaxe");
         BuffPickaxe(pickaxe, fsm.GetState("Spawn Bullet L"));
         BuffPickaxe(pickaxe, fsm.GetState("Spawn Bullet R"));
     }
+
+    private const float PICKAXE_BUFF = 2.25f;
 
     private void BuffPickaxe(FsmGameObject pickaxe, FsmState state)
     {
@@ -80,7 +97,7 @@ internal class ImmortalMylaModule : ItemChanger.Modules.Module
 
             var r2d = obj.GetComponent<Rigidbody2D>();
             var oldVel = r2d.velocity;
-            r2d.velocity = new(oldVel.x * 2, oldVel.y / 2);
+            r2d.velocity = new(oldVel.x * PICKAXE_BUFF, oldVel.y / PICKAXE_BUFF);
         }));
     }
 }
