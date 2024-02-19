@@ -98,7 +98,7 @@ internal class SpicyBrettaController : MonoBehaviour
         Spawn(pre.PlantTrapRight, new(22.35f, 47.3f));
         Spawn(pre.MushroomTurretLeft, new(14.6f, 53));
         Spawn(pre.MushroomTurretLeft, new(14.6f, 62.3f));
-        Spawn(pre.PlantTrapRight, new(17, 57.1f));
+        Spawn(pre.PlantTrapRight, new(17.35f, 57.1f));
         Spawn(pre.Belfly, new(20.8f, 65.2f));
         Spawn(pre.HiveWall, new(26, 63));
         SpawnSpikeWall(false, 34, 47.5f, 63f);
@@ -240,7 +240,7 @@ internal class SpicyBrettaController : MonoBehaviour
         var introLand = fsm.GetState("Intro Land");
         introLand.GetFirstActionOfType<SetPosition>().y.Value = TRAITOR_Y;
         var roar = fsm.GetState("Roar");
-        roar.GetFirstActionOfType<SetFsmString>().setValue = "BRETTA_LORD";
+        roar.GetFirstActionOfType<SetFsmString>().setValue = "BRETTOR_LORD";
         var land = fsm.GetState("Land");
         land.GetFirstActionOfType<SetPosition>().y = TRAITOR_Y;
         var deathShift = fsm.GetState("Death Shift?");
@@ -316,9 +316,9 @@ internal class SpicyBrettaModule : ItemChanger.Modules.Module
     {
         switch (key)
         {
-            case "BRETTA_LORD_SUPER": return "";
-            case "BRETTA_LORD_MAIN": return "Brettor Lord";
-            case "BRETTA_LORD_SUB": return "";
+            case "BRETTOR_LORD_SUPER": return "";
+            case "BRETTOR_LORD_MAIN": return "Brettor";
+            case "BRETTOR_LORD_SUB": return "Lord";
             case "BRETTEK_SUPER": return "Brooding";
             case "BRETTEK_MAIN": return "Brettek";
             case "BRETTEK_SUB": return "";
