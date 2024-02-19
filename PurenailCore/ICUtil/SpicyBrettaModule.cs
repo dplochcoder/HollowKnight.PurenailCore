@@ -14,7 +14,6 @@ namespace PurenailCore.ICUtil;
 internal class TraitorLordExpandedVision : MonoBehaviour
 {
     private GameObject knight;
-    private FsmBool facingRight;
     private FsmBool frontCheck;
     private FsmBool backCheck;
     private FsmBool walkCheck;
@@ -25,7 +24,6 @@ internal class TraitorLordExpandedVision : MonoBehaviour
 
         var fsm = gameObject.LocateMyFSM("Mantis");
         var vars = fsm.FsmVariables;
-        facingRight = vars.GetFsmBool("Facing Right");
         frontCheck = vars.GetFsmBool("Front Range");
         backCheck = vars.GetFsmBool("Back Range");
         walkCheck = vars.GetFsmBool("Walk Range");
@@ -40,9 +38,8 @@ internal class TraitorLordExpandedVision : MonoBehaviour
         var x = gameObject.transform.position.x;
         var kx = knight.transform.position.x;
         float dx = kx - x;
-        var right = facingRight.Value;
 
-        if (right)
+        if (gameObject.transform.localScale.x > 0)
         {
             frontCheck.Value = dx >= 0 && dx <= TRAITOR_RANGE;
             backCheck.Value = dx >= -TRAITOR_RANGE && dx <= 0;
@@ -118,7 +115,7 @@ internal class SpicyBrettaController : MonoBehaviour
         Spawn(Preloader.Instance.Belfly, new(65, 65.1f));
 
         var squishTurret = GameObject.Find("Mushroom Turret");
-        squishTurret.transform.SetPositionX(44.2f);
+        squishTurret.transform.SetPositionX(18);
         var mawlek = Spawn(pre.BroodingMawlek, new(18, 44.2f, 2.4f));
         var mawlekCtrl = mawlek.LocateMyFSM("Mawlek Control");
         mawlekCtrl.GetState("Wake Land").AddLastAction(new Lambda(() =>
