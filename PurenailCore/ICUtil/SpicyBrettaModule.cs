@@ -117,7 +117,7 @@ internal class SpicyBrettaController : MonoBehaviour
         Spawn(pre.HiveWall, new(53.5f, 55));
         Spawn(Preloader.Instance.Belfly, new(65, 65.1f));
 
-        var squishTurret = GameObject.Find("Mushroot Turret");
+        var squishTurret = GameObject.Find("Mushroom Turret");
         squishTurret.transform.SetPositionX(44.2f);
         var mawlek = Spawn(pre.BroodingMawlek, new(18, 44.2f, 2.4f));
         var mawlekCtrl = mawlek.LocateMyFSM("Mawlek Control");
