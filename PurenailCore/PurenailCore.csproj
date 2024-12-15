@@ -10,8 +10,8 @@
     <Copyright>Copyright © dplochcoder 2022</Copyright>
     <Authors>dplochcoder</Authors>
     <NoWarn>7035</NoWarn>
-    <AssemblyVersion>1.2.4</AssemblyVersion>
-    <FileVersion>1.2.4</FileVersion>
+    <AssemblyVersion>1.2.5</AssemblyVersion>
+    <FileVersion>1.2.5</FileVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <LangVersion>latest</LangVersion>
@@ -58,6 +58,9 @@
     </Reference>
     <Reference Include="ItemChanger">
       <HintPath>$(HollowKnightRefs)/Mods/ItemChanger/ItemChanger.dll</HintPath>
+    </Reference>
+    <Reference Include="ItemSync">
+      <HintPath>$(HollowKnightRefs)/Mods/ItemSync/ItemSync.dll</HintPath>
     </Reference>
     <Reference Include="MMHOOK_Assembly-CSharp">
       <HintPath>$(HollowKnightRefs)/MMHOOK_Assembly-CSharp.dll</HintPath>

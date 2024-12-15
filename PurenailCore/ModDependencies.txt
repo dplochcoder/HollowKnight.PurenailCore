@@ -2,3 +2,5 @@ ItemChanger
 RandomizerCore
 RandomizerCore.Json
 Randomizer 4
+
+ItemSync
