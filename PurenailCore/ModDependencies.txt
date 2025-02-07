@@ -4,3 +4,4 @@ RandomizerCore.Json
 Randomizer 4
 
 ItemSync
+Scatternest
