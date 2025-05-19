@@ -1,4 +1,5 @@
-﻿using Modding;
+﻿using ItemChanger;
+using Modding;
 using PurenailCore.ICUtil;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,5 +16,15 @@ public class PurenailCore : Mod
 
     public PurenailCore() : base("Purenail Core") { Instance = this; }
 
-    public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects) => PriorityEvents.Setup();
+    public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
+    {
+        PriorityEvents.Setup();
+
+        On.UIManager.StartNewGame += (orig, self, permaDeath, bossRush) =>
+        {
+            orig(self, permaDeath, bossRush);
+
+            // ItemChangerMod.CreateSettingsProfile(false);
+        };
+    }
 }
