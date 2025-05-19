@@ -24,7 +24,7 @@ public class PurenailCore : Mod
         {
             orig(self, permaDeath, bossRush);
 
-            // ItemChangerMod.CreateSettingsProfile(false);
+            ItemChangerMod.CreateSettingsProfile(false);
         };
     }
 }
