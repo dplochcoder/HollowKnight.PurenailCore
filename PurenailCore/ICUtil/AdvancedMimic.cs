@@ -4,6 +4,7 @@ using ItemChanger.Containers;
 using ItemChanger.Extensions;
 using ItemChanger.Items;
 using ItemChanger.Util;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -20,24 +21,16 @@ internal class AdvancedMimicContainer : MimicContainer
         var mimicContainer = MimicUtil.CreateNewMimic(info);
 
         var mimicItem = info.giveInfo.items.OfType<AdvancedMimic>().FirstOrDefault();
+        var fsm = mimicContainer.FindChild("Grub Mimic Top")!.FindChild("Grub Mimic 1")!.LocateMyFSM("Grub Mimic");
+
         if (mimicItem != null)
         {
             if (mimicItem.Scale != null) mimicContainer.transform.localScale *= mimicItem.Scale.Value;
-
-            var fsm = mimicContainer.FindChild("Grub Mimic Top")!.FindChild("Grub Mimic 1")!.LocateMyFSM("Grub Mimic");
-            if (mimicItem.MaxSpeed != null)
-            {
-                fsm.GetState("Chase").GetFirstActionOfType<ChaseObjectGround>().speedMax = mimicItem.MaxSpeed;
-                fsm.GetState("Cooldown").GetFirstActionOfType<ChaseObjectGround>().speedMax = mimicItem.MaxSpeed;
-            }
-
-            if (mimicItem.Acceleration != null)
-            {
-                fsm.GetState("Chase").GetFirstActionOfType<ChaseObjectGround>().acceleration = mimicItem.Acceleration;
-                fsm.GetState("Cooldown").GetFirstActionOfType<ChaseObjectGround>().acceleration = mimicItem.MaxSpeed;
-            }
-
             if (mimicItem.PurenailHP != null) fsm.gameObject.GetComponent<HealthManager>().hp = mimicItem.PurenailHP.Value;
+
+            List<ChaseObjectGround> chase = [fsm.GetState("Chase").GetFirstActionOfType<ChaseObjectGround>(), fsm.GetState("Cooldown").GetFirstActionOfType<ChaseObjectGround>()];
+            if (mimicItem.MaxSpeed != null) chase.ForEach(c => c.speedMax = mimicItem.MaxSpeed.Value);
+            if (mimicItem.Acceleration != null) chase.ForEach(c => c.acceleration = mimicItem.Acceleration.Value);
         }
 
         return mimicContainer;
