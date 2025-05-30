@@ -1,5 +1,4 @@
-﻿using HutongGames.PlayMaker.Actions;
-using ItemChanger;
+﻿using ItemChanger;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,8 +12,16 @@ internal record DamageEnemiesRemoverDeployer : IDeployer
     {
         foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>())
         {
-            if (fsm.FsmName == "damages_enemy") Object.Destroy(fsm);
+            if (fsm.FsmName == "damages_enemy" && IsHazardDamager(fsm.gameObject)) Object.Destroy(fsm);
         }
         foreach (var damageEnemies in Object.FindObjectsOfType<DamageEnemies>()) Object.Destroy(damageEnemies);
+    }
+
+    private bool IsHazardDamager(GameObject go)
+    {
+        if (go.GetComponent<DamageHero>() is DamageHero dh && dh.hazardType > 1) return true;
+        if (go.LocateMyFSM("damages_hero") != null) return true;
+
+        return false;
     }
 }
