@@ -1,7 +1,9 @@
-﻿using HutongGames.PlayMaker.Actions;
+﻿using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using ItemChanger;
 using ItemChanger.Containers;
 using ItemChanger.Extensions;
+using ItemChanger.FsmStateActions;
 using ItemChanger.Items;
 using ItemChanger.Util;
 using System.Collections.Generic;
@@ -16,12 +18,33 @@ internal class AdvancedMimicContainer : MimicContainer
 
     public override string Name => AdvancedMimic;
 
+    private static void AddGlobalTransition(PlayMakerFSM fsm, FsmTransition transition)
+    {
+        var arr = new FsmTransition[fsm.Fsm.GlobalTransitions.Length + 1];
+        System.Array.Copy(fsm.Fsm.GlobalTransitions, arr, arr.Length - 1);
+        arr[arr.Length - 1] = transition;
+        fsm.Fsm.GlobalTransitions = arr;
+    }
+
     public override GameObject GetNewContainer(ContainerInfo info)
     {
         var mimicContainer = MimicUtil.CreateNewMimic(info);
 
         var mimicItem = info.giveInfo.items.OfType<AdvancedMimic>().FirstOrDefault();
         var fsm = mimicContainer.FindChild("Grub Mimic Top")!.FindChild("Grub Mimic 1")!.LocateMyFSM("Grub Mimic");
+
+        var quickKill = fsm.AddState("Quick Kill");
+        quickKill.AddLastAction(new Lambda(() =>
+        {
+            var hm = fsm.gameObject.GetComponent<HealthManager>();
+            hm.ApplyExtraDamage(hm.hp);
+        }));
+        AddGlobalTransition(fsm, new()
+        {
+            ToState = "Quick Kill",
+            ToFsmState = quickKill,
+            FsmEvent = FsmEvent.GetFsmEvent("GRIMM DEFEATED")
+        });
 
         if (mimicItem != null)
         {
