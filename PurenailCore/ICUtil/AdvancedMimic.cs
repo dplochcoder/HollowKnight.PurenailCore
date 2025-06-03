@@ -49,7 +49,6 @@ internal class AdvancedMimicContainer : MimicContainer
         if (mimicItem != null)
         {
             if (mimicItem.Scale != null) mimicContainer.transform.localScale *= mimicItem.Scale.Value;
-            if (mimicItem.PurenailHP != null) fsm.gameObject.GetComponent<HealthManager>().hp = mimicItem.PurenailHP.Value;
 
             List<ChaseObjectGround> chase = [fsm.GetState("Chase").GetFirstActionOfType<ChaseObjectGround>(), fsm.GetState("Cooldown").GetFirstActionOfType<ChaseObjectGround>()];
             if (mimicItem.MaxSpeed != null) chase.ForEach(c => c.speedMax = mimicItem.MaxSpeed.Value);
@@ -67,7 +66,6 @@ internal class AdvancedMimic : MimicItem
     public float? Scale;
     public float? MaxSpeed;
     public float? Acceleration;
-    public int? PurenailHP;
 
     public override string GetPreferredContainer() => AdvancedMimicContainer.AdvancedMimic;
 
