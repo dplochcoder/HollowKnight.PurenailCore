@@ -13,6 +13,7 @@ internal record DamageEnemiesRemoverDeployer : IDeployer
         foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>())
         {
             if (fsm.FsmName == "damages_enemy" && IsHazardDamager(fsm.gameObject)) Object.Destroy(fsm);
+            if (fsm.FsmName == "enemy_message" && fsm.FsmVariables.GetFsmString("Event")?.Value == "ACID") Object.Destroy(fsm);
         }
         foreach (var damageEnemies in Object.FindObjectsOfType<DamageEnemies>()) Object.Destroy(damageEnemies);
     }
