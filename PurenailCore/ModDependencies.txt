@@ -1,7 +1,6 @@
 ItemChanger
+ItemSync
 RandomizerCore
 RandomizerCore.Json
 Randomizer 4
-
-ItemSync
 Scatternest
