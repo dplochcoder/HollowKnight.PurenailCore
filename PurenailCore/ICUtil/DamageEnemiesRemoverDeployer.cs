@@ -1,4 +1,6 @@
 ﻿using ItemChanger;
+using ItemChanger.Extensions;
+using ItemChanger.FsmStateActions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,9 +14,25 @@ internal record DamageEnemiesRemoverDeployer : IDeployer
     {
         foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>())
         {
-            if (fsm.FsmName == "damages_enemy" && IsHazardDamager(fsm.gameObject)) Object.Destroy(fsm);
-            if (fsm.FsmName == "enemy_message" && fsm.FsmVariables.GetFsmString("Event")?.Value == "ACID") Object.Destroy(fsm);
+            if (fsm.FsmName == "damages_enemy" && IsHazardDamager(fsm.gameObject))
+            {
+                fsm.GetState("Send Event").AddFirstAction(new Lambda(() =>
+                {
+                    var target = fsm.FsmVariables.GetFsmGameObject("Collider").Value;
+                    if (target.name.ToUpper().Contains("MIMIC")) fsm.SendEvent("CANCEL");
+                }));
+            }
+            if (fsm.FsmName == "enemy_message" && fsm.FsmVariables.GetFsmString("Event")?.Value == "ACID")
+            {
+                fsm.GetState("Send").AddFirstAction(new Lambda(() =>
+                {
+                    var target = fsm.FsmVariables.GetFsmGameObject("Collider").Value;
+                    if (target.name.ToUpper().Contains("MIMIC")) fsm.SendEvent("FINISHED");
+                }));
+            }
         }
+
+        // Meh
         foreach (var damageEnemies in Object.FindObjectsOfType<DamageEnemies>()) Object.Destroy(damageEnemies);
     }
 
