@@ -59,7 +59,7 @@ public class SceneLoaderModule : ItemChanger.Modules.Module
 
         var lastSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         var nextSceneName = sceneLoad.TargetSceneName;
-        unload.ForEach(h => h(lastSceneName, nextSceneName));
+        sceneLoad.ActivationComplete += () => unload.ForEach(h => h(lastSceneName, nextSceneName));
 
         expectedCallbacks = before.Count;
         finishedCallbacks.Clear();
