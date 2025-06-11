@@ -37,7 +37,7 @@ public class SceneLoaderModule : ItemChanger.Modules.Module
 
         cursor.GotoNext(i => i.MatchCallvirt<SceneLoad>("get_IsFetchAllowed"));
         cursor.Remove();
-        cursor.EmitDelegate(BeforeIsFetchAllowed);
+        cursor.EmitDelegate(OverrideIsFetchAllowed);
     }
 
     private HashSet<BeforeSceneLoadHook> beforeLoadHooks = [];
@@ -70,5 +70,5 @@ public class SceneLoaderModule : ItemChanger.Modules.Module
         }
     }
 
-    private bool BeforeIsFetchAllowed(SceneLoad sceneLoad) => sceneLoad.IsFetchAllowed && finishedCallbacks.Count >= expectedCallbacks;
+    private bool OverrideIsFetchAllowed(SceneLoad sceneLoad) => sceneLoad.IsFetchAllowed && finishedCallbacks.Count >= expectedCallbacks;
 }
