@@ -2,24 +2,22 @@
 
 Common functionality for Purenail's mods
 
-## ICUtil.PriorityEvents
+## GOUtil
 
-Additional RandomizerMod.PriorityEvents for specific override functions.
+Various utilities for working with GameObjects, including particle systems, color setting, object pooling and timer tickers.
 
-MoreDoors and DarknessRandomizer use this to ensure they make SceneManager changes in a consistent order on scene load. This is necessary to ensure doors interop with darkness changes correctly.
+## ICUtil
 
-## ModUtil.VersionUtil
+Various utilities for working with [ItemChanger](https://github.com/homothetyhk/HollowKnight.ItemChanger), including image encoding, priority event listeners and more.
 
-Utility class for calculating the version string for a given assembly. Uses the SHA1 of the dll, mod 997.
+## ModUtil
+
+Various utilities related to the [Modding API](https://github.com/hk-modding/api). Includes IL utils, a sha1 version computer, and a Preloading annotation system.
 
 ## RandoUtil
 
-### InfectionWallLogicFix
+Various utilities related to the [Randomizer 4](https://github.com/homothetyhk/RandomizerMod) mod. Mostly related to Logic.
 
-Makes the transition between Ancestral Mound and False Knight permanently out-of-logic in non-RoomRando, due to possible infection.
+## SystemUtil
 
-MoreDoors and DarknessRandomizer apply this fix due to the False Door and potential dark-crossroads respectively, since it may erroneously put False Knight in logic otherwise when it shouldn't be.
-
-### LogicReplacer
-
-An efficient, generic Logic rewriter that takes a map of substitutions.
+Various extensions to the System namespace, including some Json utilities.
