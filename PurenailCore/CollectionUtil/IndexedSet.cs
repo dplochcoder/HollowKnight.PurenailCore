@@ -49,8 +49,6 @@ public class IndexedSet<T> : IList<T>
         return true;
     }
 
-    public void Remove(int idx) => Remove(Get(idx));
-
     public void Clear()
     {
         positions.Clear();
@@ -156,7 +154,7 @@ public class IndexedWeightedSet<T>
 
     private void RemoveIndex(int idx)
     {
-        set.Remove(idx);
+        set.RemoveAt(idx);
         sums[idx] = sums.Last;
         sums.RemoveLast();
     }
