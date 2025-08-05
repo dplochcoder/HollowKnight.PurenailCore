@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PurenailCore.SystemUtil;
 
@@ -34,16 +35,30 @@ public static class Extensions
         return creator.Invoke();
     }
 
-    public static void Shuffle<T>(this List<T> list, Random r)
+    public static void Shuffle<T>(this List<T> self, Random r)
     {
-        for (int i = 0; i < list.Count - 1; ++i)
+        for (int i = 0; i < self.Count - 1; ++i)
         {
-            int j = i + r.Next(0, list.Count - i);
-            T temp = list[i];
-            list[i] = list[j];
-            list[j] = temp;
+            int j = i + r.Next(0, self.Count - i);
+            T temp = self[i];
+            self[i] = self[j];
+            self[j] = temp;
         }
     }
+
+    public static void SortBy<T, C>(this List<T> self, Func<T, C> extractor) where C : IComparable<C>
+    {
+        List<(T, C)> pairs = [.. self.Select(t => (t, extractor(t)))];
+        pairs.Sort((a, b) => a.Item2.CompareTo(b.Item2));
+        self.Clear();
+        self.AddRange([.. pairs.Select(p => p.Item1)]);
+    }
+
+    public static float NextFloat(this Random self, float min, float max) => min + (max - min) * (float) self.NextDouble();
+
+    public static float NextFloat(this Random self, float max) => self.NextFloat(0, max);
+
+    public static float NextFloat(this Random self) => self.NextFloat(0f, 1f);
 
     public static void ForEach<T>(this IEnumerable<T> iter, Action<T> action)
     {
