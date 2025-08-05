@@ -64,8 +64,8 @@ public class Preloader
     private class Target
     {
         public bool isPrefab;
-        public List<FieldInfo> Fields = new();
-        public List<PropertyInfo> Props = new();
+        public List<FieldInfo> Fields = [];
+        public List<PropertyInfo> Props = [];
 
         public void SetValue(object obj, UnityEngine.Object value)
         {
@@ -82,7 +82,7 @@ public class Preloader
         {
             if (_targets != null) return _targets;
 
-            _targets = new();
+            _targets = [];
 
             foreach (var prop in GetType().GetProperties())
             {
@@ -116,7 +116,7 @@ public class Preloader
 
     public List<(string, string)> GetPreloadNames()
     {
-        List<(string, string)> l = new();
+        List<(string, string)> l = [];
         if (!Targets.TryGetValue(typeof(GameObject), out var dict)) return l;
 
         foreach (var e1 in dict) foreach (var e2 in e1.Value) if (!e2.Value.isPrefab) l.Add((e1.Key, e2.Key));
@@ -125,14 +125,14 @@ public class Preloader
 
     public (string, Func<IEnumerator>)[] PreloadSceneHooks()
     {
-        List<(string, Func<IEnumerator>)> l = new();
+        List<(string, Func<IEnumerator>)> l = [];
         foreach (var e1 in Targets)
         {
             var type = e1.Key;
             foreach (var e2 in e1.Value)
             {
                 var sceneName = e2.Key;
-                List<string> objNames = new();
+                List<string> objNames = [];
                 foreach (var e3 in e2.Value)
                 {
                     var objName = e3.Key;

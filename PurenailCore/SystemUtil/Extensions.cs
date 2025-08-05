@@ -40,9 +40,7 @@ public static class Extensions
         for (int i = 0; i < self.Count - 1; ++i)
         {
             int j = i + r.Next(0, self.Count - i);
-            T temp = self[i];
-            self[i] = self[j];
-            self[j] = temp;
+            (self[i], self[j]) = (self[j], self[i]);
         }
     }
 

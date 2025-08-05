@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 namespace PurenailCore.CollectionUtil;
 
@@ -21,7 +22,7 @@ public class IndexedSet<T> : IList<T>
 
     public T Get(int index)
     {
-        if (index < 0 || index >= positions.Count) throw new System.ArgumentOutOfRangeException($"{index}: [0, {positions.Count})");
+        if (index < 0 || index >= positions.Count) throw new System.IndexOutOfRangeException($"{index}: [0, {positions.Count})");
 
         Compact();
         return elements[index];
@@ -47,6 +48,8 @@ public class IndexedSet<T> : IList<T>
         elements.Remove(idx);
         return true;
     }
+
+    public void Remove(int idx) => Remove(Get(idx));
 
     public void Clear()
     {

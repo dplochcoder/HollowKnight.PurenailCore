@@ -28,14 +28,14 @@ public static class VersionUtil
         return HashBytes(bytes);
     }
 
-    public static string ComputeVersion<T>() => ComputeVersion<T>(new());
+    public static string ComputeVersion<T>() => ComputeVersion<T>([]);
 
     public static string ComputeVersion<T>(List<string> extraFiles)
     {
         var asm = typeof(T).Assembly;
         int sum = HashFile(asm.Location);
 
-        foreach (var f in extraFiles ?? new()) sum += HashFile(f);
+        foreach (var f in extraFiles ?? []) sum += HashFile(f);
         sum %= 997;
 
         System.Version v = asm.GetName().Version;

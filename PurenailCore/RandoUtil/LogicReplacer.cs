@@ -7,8 +7,8 @@ namespace PurenailCore.RandoUtil;
 
 public class LogicReplacer
 {
-    public HashSet<string> IgnoredNames = new();
-    public Dictionary<string, SimpleToken> SimpleTokenReplacements = new();
+    public HashSet<string> IgnoredNames = [];
+    public Dictionary<string, SimpleToken> SimpleTokenReplacements = [];
 
     private LogicClause EditLogicClause(LogicClause lc)
     {
@@ -36,7 +36,7 @@ public class LogicReplacer
 
     public void Apply(LogicManagerBuilder lmb)
     {
-        List<string> keys = new(lmb.LogicLookup.Keys.Where(n => !IgnoredNames.Contains(n)));
+        List<string> keys = [.. lmb.LogicLookup.Keys.Where(n => !IgnoredNames.Contains(n))];
         foreach (var key in keys)
         {
             lmb.LogicLookup[key] = EditLogicClause(lmb.LogicLookup[key]);

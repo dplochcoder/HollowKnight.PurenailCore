@@ -165,7 +165,7 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
 
 public class IndexedSortedMultimap<K, V>
 {
-    private readonly IndexedSortedDictionary<K, HashSet<V>> dict = new IndexedSortedDictionary<K, HashSet<V>>();
+    private readonly IndexedSortedDictionary<K, HashSet<V>> dict = [];
 
     private HashSet<V> GetOrAddNew(K key)
     {
@@ -216,7 +216,7 @@ public class IndexedSortedMultimap<K, V>
 
     public IEnumerable<V> Get(K key)
     {
-        if (dict.TryGetLowerBound(key, out var boundKey, out var set)) return set;
+        if (dict.TryGetLowerBound(key, out K _, out var set)) return set;
         else return EmptyList;
     }
 

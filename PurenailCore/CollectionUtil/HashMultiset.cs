@@ -6,7 +6,7 @@ namespace PurenailCore.CollectionUtil;
 // HashSet that can store duplicate values.
 public class HashMultiset<T>
 {
-    private readonly Dictionary<T, int> counts = new Dictionary<T, int>();
+    private readonly Dictionary<T, int> counts = [];
     private int total;
 
     public int Count => total;
