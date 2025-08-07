@@ -70,9 +70,9 @@ public class IntervalSet
         }
     }
 
-    internal bool IsEmpty => intervals.Count == 0;
+    public bool IsEmpty => intervals.Count == 0;
 
-    internal IndexedWeightedSet<Interval> ToWeightedSet()
+    public IndexedWeightedSet<Interval> ToWeightedSet()
     {
         IndexedWeightedSet<Interval> ret = new();
         foreach (var i in intervals) ret.Add(i, i.Span);
