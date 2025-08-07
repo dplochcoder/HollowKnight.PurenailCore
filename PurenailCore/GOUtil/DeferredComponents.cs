@@ -25,7 +25,7 @@ public class DeferredComponents : MonoBehaviour
 
 public static class DeferredComponentsExtensions
 {
-    internal static Deferred<T> GetDeferredComponent<T>(this GameObject self) where T : Component
+    public static Deferred<T> GetDeferredComponent<T>(this GameObject self) where T : Component
     {
         var direct = self.GetComponent<T>();
         if (direct != null) return new(direct);
@@ -33,7 +33,7 @@ public static class DeferredComponentsExtensions
         return self.GetOrAddComponent<DeferredComponents>().Get<T>();
     }
 
-    internal static T GotOrAddDeferredComponent<T>(this GameObject self) where T : Component
+    public static T GotOrAddDeferredComponent<T>(this GameObject self) where T : Component
     {
         var direct = self.GetComponent<T>();
         if (direct != null) return direct;
@@ -41,7 +41,7 @@ public static class DeferredComponentsExtensions
         return self.AddDeferredComponent<T>();
     }
 
-    internal static T AddDeferredComponent<T>(this GameObject self) where T : Component
+    public static T AddDeferredComponent<T>(this GameObject self) where T : Component
     {
         var direct = self.AddComponent<T>();
         self.GetComponent<DeferredComponents>()?.Set(direct);
