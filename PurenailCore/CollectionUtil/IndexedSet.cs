@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.UIElements;
+using UnityEngine;
 
 namespace PurenailCore.CollectionUtil;
 
@@ -26,6 +26,16 @@ public class IndexedSet<T> : IList<T>
 
         Compact();
         return elements[index];
+    }
+
+    public T? Take(System.Random? r = null)
+    {
+        if (Count == 0) return default;
+
+        int index = r?.Next(Count) ?? Random.Range(0, Count);
+        var item = Get(index);
+        RemoveAt(index);
+        return item;
     }
 
     public bool Contains(T item) => positions.ContainsKey(item);
