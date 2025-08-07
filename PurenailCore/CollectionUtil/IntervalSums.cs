@@ -1,5 +1,6 @@
 ﻿using PurenailCore.SystemUtil;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PurenailCore.CollectionUtil;
 
@@ -47,7 +48,7 @@ public class IntervalSums
         return min;
     }
 
-    public int SelectWeightedIndex(System.Random r) => SelectWeightedIndex(r.NextFloat(Sum));
+    public int SelectWeightedIndex(System.Random? r = null) => SelectWeightedIndex(r?.NextFloat(Sum) ?? Random.Range(0, Sum));
 
     public float Last => values[values.Count - 1];
 

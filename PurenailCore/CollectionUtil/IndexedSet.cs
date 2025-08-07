@@ -169,7 +169,7 @@ public class IndexedWeightedSet<T>
         return weight;
     }
 
-    public T Take(System.Random r)
+    public T Take(System.Random? r = null)
     {
         var idx = sums.SelectWeightedIndex(r);
 
@@ -178,7 +178,7 @@ public class IndexedWeightedSet<T>
         return elem;
     }
 
-    public T Sample(System.Random r)
+    public T Sample(System.Random? r = null)
     {
         var idx = sums.SelectWeightedIndex(r);
         return set[idx];
