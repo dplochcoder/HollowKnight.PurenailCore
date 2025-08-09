@@ -22,6 +22,8 @@ public class HashMultimap<K, V>
         }
     }
 
+    public IEnumerable<K> Keys => dict.Keys;
+
     public bool Contains(K key, V value) => dict.TryGetValue(key, out var values) && values.Contains(value);
 
     private static readonly List<V> EmptyList = [];
