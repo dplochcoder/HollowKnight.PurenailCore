@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace PurenailCore.CollectionUtil;
@@ -149,6 +150,8 @@ public class IndexedWeightedSet<T>
     public int Count => set.Count;
 
     public float TotalWeight => sums.Sum;
+
+    public IEnumerable<(T, float)> Elements() => set.Zip(sums.Values(), (a, b) => (a, b));
 
     public bool Contains(T item) => set.Contains(item);
 

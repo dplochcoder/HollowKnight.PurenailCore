@@ -15,6 +15,8 @@ public class IntervalSums
 
     public int Count => values.Count;
 
+    public IEnumerable<float> Values() => values;
+
     public void Add(float value)
     {
         values.Add(value);
