@@ -27,7 +27,9 @@ public record Interval
 
     public bool IsEmpty => Min == Max;
 
-    public float Sample(System.Random r) => r.NextFloat(Min, Max);
+    public bool Contains(float x) => !IsEmpty && x >= Min && x <= Max;
+
+    public float Sample(System.Random? r = null) => r?.NextFloat(Min, Max) ?? Random.Range(Min, Max);
 
     public static Interval Intersection(Interval a, Interval b) => new(Mathf.Max(a.Min, b.Min), Mathf.Min(a.Max, b.Max));
 
