@@ -39,7 +39,7 @@ public class HashMultiset<T>
     
     public bool Remove(T item, int count)
     {
-        if (count <= 0) return;
+        if (count <= 0) return false;
         if (!counts.TryGetValue(item, out int current)) return false;
 
         if (count >= current)
