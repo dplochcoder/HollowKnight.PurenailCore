@@ -42,6 +42,15 @@ public class HashMultiset<T>
         return true;
     }
 
+    public bool RemoveAll(T item)
+    {
+        if (!counts.TryGetValue(item, out int count)) return false;
+
+        counts.Remove(item);
+        total -= count;
+        return true;
+    }
+
     public bool Remove(IEnumerable<T> items)
     {
         bool changed = false;
