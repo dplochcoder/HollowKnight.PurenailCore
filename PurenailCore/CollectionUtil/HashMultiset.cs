@@ -1,4 +1,5 @@
 ﻿using PurenailCore.SystemUtil;
+using System;
 using System.Collections.Generic;
 
 namespace PurenailCore.CollectionUtil;
@@ -21,24 +22,35 @@ public class HashMultiset<T>
 
     public void Clear() => counts.Clear();
 
-    public void Add(T item)
-    {
-        if (!counts.TryGetValue(item, out int count)) count = 0;
-        counts[item] = count + 1;
+    public void Add(T item) => Add(item, 1);
 
-        ++total;
+    public void Add(T item, int count)
+    {
+        if (!counts.TryGetValue(item, out int current)) current = 0;
+        counts[item] = current + count;
+
+        total += count;
     }
 
     public void Add(IEnumerable<T> items) => items.ForEach(Add);
 
-    public bool Remove(T item)
+    public bool Remove(T item) => Remove(item, 1);
+    
+    public bool Remove(T item, int count)
     {
-        if (!counts.TryGetValue(item, out int count)) return false;
+        if (!counts.TryGetValue(item, out int current)) return false;
 
-        if (--count == 0) counts.Remove(item);
-        else counts[item] = count;
+        if (count >= current)
+        {
+            counts.Remove(item);
+            total -= current;
+        }
+        else
+        {
+            total -= count;
+            counts[item] = current - count;
+        }
 
-        --total;
         return true;
     }
 
