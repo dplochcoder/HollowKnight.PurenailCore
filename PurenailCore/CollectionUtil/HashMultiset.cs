@@ -26,6 +26,7 @@ public class HashMultiset<T>
 
     public void Add(T item, int count)
     {
+        if (count <= 0) return;
         if (!counts.TryGetValue(item, out int current)) current = 0;
         counts[item] = current + count;
 
@@ -38,6 +39,7 @@ public class HashMultiset<T>
     
     public bool Remove(T item, int count)
     {
+        if (count <= 0) return;
         if (!counts.TryGetValue(item, out int current)) return false;
 
         if (count >= current)
