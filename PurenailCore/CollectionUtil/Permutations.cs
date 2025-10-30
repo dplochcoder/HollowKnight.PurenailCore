@@ -23,9 +23,9 @@ public static class PermutationsExt
             int j = startIndex;
             input[j++] = elems[i];
             for (int k = 0; k < elems.Count; k++) if (k != i) input[j++] = elems[k];
-        }
 
-        ForEachPermutation(input, startIndex + 1, action);
+            ForEachPermutation(input, startIndex + 1, action);
+        }
     }
 
     // Recursively enumerate all permutations of the input. The provided list is reused for efficiency.
