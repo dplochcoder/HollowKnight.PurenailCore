@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -52,6 +53,14 @@ public class PrefabPreload : Attribute, IPreload
     string IPreload.ObjectName => ObjectName;
 }
 
+// Mark resources to load from resources.assets with this.
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
+public class ResourcePreload : Attribute
+{
+    public readonly string Name;
+    public ResourcePreload(string name) => this.Name = name;
+}
+
 // Subclass this class with your own Preloader type.
 // Then, add methods like this:
 //
@@ -74,15 +83,15 @@ public class Preloader
         }
     }
 
-    private Dictionary<Type, Dictionary<string, Dictionary<string, Target>>> _targets;
+    private Dictionary<Type, Dictionary<string, Dictionary<string, Target>>>? _preloadTargets;
 
-    private Dictionary<Type, Dictionary<string, Dictionary<string, Target>>> Targets
+    private Dictionary<Type, Dictionary<string, Dictionary<string, Target>>> PreloadTargets
     {
         get
         {
-            if (_targets != null) return _targets;
+            if (_preloadTargets != null) return _preloadTargets;
 
-            _targets = [];
+            _preloadTargets = [];
 
             foreach (var prop in GetType().GetProperties())
             {
@@ -92,7 +101,7 @@ public class Preloader
                 if (!typeof(UnityEngine.Object).IsAssignableFrom(prop.PropertyType))
                     throw new ArgumentException($"Improper use of [Preload] attribute: Type {prop.PropertyType} is not a UnityEngine.Object type");
 
-                var target = _targets.GetOrAddNew(prop.PropertyType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
+                var target = _preloadTargets.GetOrAddNew(prop.PropertyType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
                 target.isPrefab = preload.IsPrefab;
                 target.Props.Add(prop);
             }
@@ -105,19 +114,58 @@ public class Preloader
                 if (!typeof(UnityEngine.Object).IsAssignableFrom(field.FieldType))
                     throw new ArgumentException($"Improper use of [Preload] attribute: Type {field.FieldType} is not a UnityEngine.Object type");
 
-                var target = _targets.GetOrAddNew(field.FieldType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
+                var target = _preloadTargets.GetOrAddNew(field.FieldType).GetOrAddNew(preload.SceneName).GetOrAddNew(preload.ObjectName);
                 target.isPrefab = preload.IsPrefab;
                 target.Fields.Add(field);
             }
 
-            return _targets;
+            return _preloadTargets;
         }
     }
+
+    private Dictionary<Type, Dictionary<string, Target>>? _resourceTargets;
+
+    private Dictionary<Type, Dictionary<string, Target>> ResourceTargets
+    {
+        get
+        {
+            if (_resourceTargets != null) return _resourceTargets;
+
+            _resourceTargets = [];
+
+            foreach (var prop in GetType().GetProperties())
+            {
+                var attr = prop.GetCustomAttribute<ResourcePreload>();
+                if (attr == null) continue;
+
+                if (!typeof(UnityEngine.Object).IsAssignableFrom(prop.PropertyType))
+                    throw new ArgumentException($"Improper use of [ResourcePreload] attribute: Type {prop.PropertyType} is not a UnityEngine.Object type");
+
+                var target = _resourceTargets.GetOrAddNew(prop.PropertyType).GetOrAddNew(attr.Name);
+                target.Props.Add(prop);
+            }
+
+            foreach (var field in GetType().GetFields())
+            {
+                var attr = field.GetCustomAttribute<ResourcePreload>();
+                if (attr == null) continue;
+
+                if (!typeof(UnityEngine.Object).IsAssignableFrom(field.FieldType))
+                    throw new ArgumentException($"Improper use of [ResourcePreload] attribute: Type {field.FieldType} is not a UnityEngine.Object type");
+
+                var target = _resourceTargets.GetOrAddNew(field.FieldType).GetOrAddNew(attr.Name);
+                target.Fields.Add(field);
+            }
+
+            return _resourceTargets;
+        }
+    }
+
 
     public List<(string, string)> GetPreloadNames()
     {
         List<(string, string)> l = [];
-        if (!Targets.TryGetValue(typeof(GameObject), out var dict)) return l;
+        if (!PreloadTargets.TryGetValue(typeof(GameObject), out var dict)) return l;
 
         foreach (var e1 in dict) foreach (var e2 in e1.Value) if (!e2.Value.isPrefab) l.Add((e1.Key, e2.Key));
         return l;
@@ -126,7 +174,7 @@ public class Preloader
     public (string, Func<IEnumerator>)[] PreloadSceneHooks()
     {
         List<(string, Func<IEnumerator>)> l = [];
-        foreach (var e1 in Targets)
+        foreach (var e1 in PreloadTargets)
         {
             var type = e1.Key;
             foreach (var e2 in e1.Value)
@@ -144,7 +192,7 @@ public class Preloader
                 {
                     IEnumerator SaveAssets()
                     {
-                        var sceneMap = Targets[type][sceneName];
+                        var sceneMap = PreloadTargets[type][sceneName];
                         foreach (var obj in Resources.FindObjectsOfTypeAll(type))
                         {
                             if (sceneMap.TryGetValue(obj.name, out var target))
@@ -167,7 +215,7 @@ public class Preloader
 
     public void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
     {
-        if (!Targets.TryGetValue(typeof(GameObject), out var dict)) return;
+        if (!PreloadTargets.TryGetValue(typeof(GameObject), out var dict)) return;
 
         foreach (var e1 in dict)
         {
@@ -178,6 +226,14 @@ public class Preloader
                     var obj = preloadedObjects[e1.Key][e2.Key];
                     e2.Value.SetValue(this, obj);
                 }
+            }
+        }
+
+        foreach (var e1 in ResourceTargets)
+        {
+            foreach (var obj in Resources.FindObjectsOfTypeAll(e1.Key))
+            {
+                if (e1.Value.TryGetValue(obj.name, out var target)) target.SetValue(this, obj);
             }
         }
     }
