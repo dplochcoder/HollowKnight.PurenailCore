@@ -16,6 +16,10 @@ Complete list of all mods authored by Purenail for Hollow Knight.
 
 It can be used for spoiler racing formats for search & routing purposes. It can also be used as a Plando editor.
 
+## Knight of Nights
+
+[KnightOfNights](https://github.com/dplochcoder/HollowKnight.KnightOfNights) contains add-ons for the Holloween 2025 Plando and re-released plando. It does things with Revek.
+
 ## Mimicpocalypse
 
 [Mimicpocalypse](https://github.com/dplochcoder/HollowKnight.Mimicpocalypse) is a mod for the HK8Y Grub Day plando, which does things with Mimics.
