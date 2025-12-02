@@ -1,0 +1,120 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
+namespace PurenailCore.CollectionUtil;
+
+public class IntervalMap<T>
+{
+    private record Entry(Interval Range, T Value)
+    {
+        public readonly Interval Range = Range;
+        public readonly T Value = Value;
+
+        public float Key => Range.Min;
+    }
+
+    private readonly IndexedSortedDictionary<float, Entry> entries = [];
+
+    private bool TryGetEntry(float x, [MaybeNullWhen(false)] out Entry entry) => entries.TryGetLowerBound(x, out _, out entry) && entry.Range.Contains(x);
+
+    private IEnumerable<Entry> GetEntries(Interval range)
+    {
+        if (TryGetEntry(range.Min, out var entry) && entry.Range.Min < range.Min) yield return entry;
+        foreach (var (_, v) in entries.GetViewBetween(range.Min, range.Max)) yield return v;
+    }
+
+    public bool TryGetValue(float x, [MaybeNullWhen(false)] out T value)
+    {
+        if (!TryGetEntry(x, out var entry))
+        {
+            value = default;
+            return false;
+        }
+
+        value = entry.Value;
+        return true;
+    }
+
+    public bool Empty => entries.Empty;
+
+    public void Clear() => entries.Clear();
+
+    public static T DefaultCombiner(T orig, T addend) => addend;
+
+    // Apply a combiner function with a provided addend onto the given range.
+    public void Add(Interval range, T value, bool coalesce = true, Func<T, T, T>? combiner = null)
+    {
+        combiner ??= DefaultCombiner;
+
+        List<Entry> toSet = [];
+        foreach (var entry in GetEntries(range))
+        {
+            if (entry.Range.Min < range.Min) toSet.Add(new(new(entry.Range.Min, range.Min), entry.Value));
+
+            Interval overlap = entry.Range & range;
+            if (!overlap.IsEmpty) toSet.Add(new(overlap, combiner(entry.Value, value)));
+
+            if (entry.Range.Max > range.Max) toSet.Add(new(new(range.Max, entry.Range.Max), entry.Value));
+        }
+
+        Set(range, value, coalesce);
+        toSet.ForEach(e => Set(e.Range, e.Value, coalesce));
+    }
+
+    // Explicitly set the contents of a specific range, ignoring previous contents.
+    public void Set(Interval range, T value, bool coalesce = true)
+    {
+        // Coalesce
+        bool haveLower = TryGetEntry(range.Min, out var lowerEntry);
+        bool haveUpper = TryGetEntry(range.Max, out var upperEntry);
+        if (haveLower)
+        {
+            if (coalesce && EqualityComparer<T>.Default.Equals(lowerEntry!.Value, value))
+            {
+                range = new(lowerEntry.Range.Min, range.Max);
+                entries.Remove(lowerEntry.Key);
+            }
+            else if (lowerEntry!.Range.Min < range.Min)
+            {
+                Entry clipped = new(new(lowerEntry.Range.Min, range.Min), lowerEntry.Value);
+                entries.Add(lowerEntry.Key, clipped);
+            }
+            else entries.Remove(lowerEntry.Key);
+        }
+        if (haveUpper)
+        {
+            if (coalesce && EqualityComparer<T>.Default.Equals(upperEntry!.Value, value))
+            {
+                range = new(range.Min, upperEntry.Range.Max);
+                entries.Remove(upperEntry.Key);
+            }
+            else if (upperEntry!.Range.Max > range.Max)
+            {
+                Entry clipped = new(new(range.Max, upperEntry.Range.Max), upperEntry.Value);
+                entries.Remove(upperEntry.Key);
+                entries.Add(clipped.Key, clipped);
+            }
+            else entries.Remove(upperEntry.Key);
+        }
+
+        Entry entry = new(range, value);
+        entries.Add(entry.Key, entry);
+    }
+
+    public void Clear(Interval range)
+    {
+        List<Entry> toSet = [];
+        List<float> toRemove = [];
+        foreach (var entry in GetEntries(range))
+        {
+            toRemove.Add(entry.Key);
+
+            if (entry.Range.Min < range.Min) toSet.Add(new(new(entry.Range.Min, range.Min), entry.Value));
+            if (entry.Range.Max > range.Max) toSet.Add(new(new(range.Max, entry.Range.Max), entry.Value));
+        }
+
+        toRemove.ForEach(k => entries.Remove(k));
+        toSet.ForEach(e => Set(e.Range, e.Value, coalesce: false));
+    }
+}

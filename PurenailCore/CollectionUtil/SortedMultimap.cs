@@ -5,7 +5,7 @@ namespace PurenailCore.CollectionUtil;
 
 public class SortedMultimap<K, V> where K : IComparable<K>
 {
-    private SortedDictionary<K, HashSet<V>> dict = [];
+    private readonly SortedDictionary<K, HashSet<V>> dict = [];
 
     public SortedDictionary<K, HashSet<V>> AsDict
     {
