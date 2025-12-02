@@ -1,5 +1,4 @@
-﻿using HutongGames.PlayMaker.Actions;
-using PurenailCore.SystemUtil;
+﻿using PurenailCore.SystemUtil;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,6 +29,8 @@ public record Interval
     public bool IsEmpty => Min == Max;
 
     public bool Contains(float x) => !IsEmpty && x >= Min && x <= Max;
+
+    public bool Contains(Interval interval) => !IsEmpty && Min <= interval.Min && Max >= interval.Max;
 
     public float Sample(System.Random? r = null) => r?.NextFloat(Min, Max) ?? Random.Range(Min, Max);
 

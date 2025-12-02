@@ -35,6 +35,18 @@ public static class Extensions
         return creator.Invoke();
     }
 
+    public static bool EnumeratorEqual<T>(this IEnumerator<T> self, IEnumerator<T> other, Func<T, T, bool>? equalsFn = null)
+    {
+        equalsFn ??= EqualityComparer<T>.Default.Equals;
+        while (true)
+        {
+            bool more = self.MoveNext();
+            if (other.MoveNext() != more) return false;
+            if (!more) return true;
+            if (!equalsFn(self.Current, other.Current)) return false;
+        }
+    }
+
     public static void Shuffle<T>(this List<T> self, Random r)
     {
         for (int i = 0; i < self.Count - 1; ++i)

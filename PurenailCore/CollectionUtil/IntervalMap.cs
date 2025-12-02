@@ -1,10 +1,13 @@
-﻿using System;
+﻿using PurenailCore.SystemUtil;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace PurenailCore.CollectionUtil;
 
-public class IntervalMap<T>
+public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap<T>>
 {
     private record Entry(Interval Range, T Value)
     {
@@ -15,6 +18,13 @@ public class IntervalMap<T>
     }
 
     private readonly IndexedSortedDictionary<float, Entry> entries = [];
+
+    public IntervalMap() { }
+
+    public IntervalMap(IEnumerable<(Interval, T)> input)
+    {
+        foreach (var (interval, value) in input) Set(interval, value);
+    }
 
     private bool TryGetEntry(float x, [MaybeNullWhen(false)] out Entry entry) => entries.TryGetLowerBound(x, out _, out entry) && entry.Range.Contains(x);
 
@@ -117,4 +127,12 @@ public class IntervalMap<T>
         toRemove.ForEach(k => entries.Remove(k));
         toSet.ForEach(e => Set(e.Range, e.Value, coalesce: false));
     }
+
+    private IEnumerator<(Interval, T)> GetEnumeratorInternal() => entries.Select(pair => (pair.Item2.Range, pair.Item2.Value)).GetEnumerator();
+
+    public IEnumerator<(Interval, T)> GetEnumerator() => GetEnumeratorInternal();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
+
+    public bool Equals(IntervalMap<T> other) => entries.Count == other.entries.Count && entries.GetEnumerator().EnumeratorEqual(other.entries.GetEnumerator());
 }

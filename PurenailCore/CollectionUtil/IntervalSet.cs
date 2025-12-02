@@ -1,11 +1,12 @@
 ﻿using PurenailCore.SystemUtil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace PurenailCore.CollectionUtil;
 
-public class IntervalSet
+public class IntervalSet : IEquatable<IntervalSet>
 {
     private readonly List<Interval> intervals = [];
 
@@ -124,4 +125,6 @@ public class IntervalSet
     public IEnumerable<Interval> Intervals() => intervals;
 
     public override string ToString() => $"[{string.Join(", ", intervals.Select(i => i.ToString()))}]";
+
+    public bool Equals(IntervalSet other) => intervals.GetEnumerator().EnumeratorEqual(other.intervals.GetEnumerator());
 }

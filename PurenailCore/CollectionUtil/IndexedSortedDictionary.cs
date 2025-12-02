@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using MonoMod.Utils;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace PurenailCore.CollectionUtil;
@@ -6,9 +7,13 @@ namespace PurenailCore.CollectionUtil;
 public interface IIndexedSortedDictionary<K, V> : IEnumerable<(K, V)>
 {
     bool Empty { get; }
+    int Count { get; }
 
     (K, V) Min { get; }
     (K, V) Max { get; }
+
+    public IEnumerable<K> Keys { get; }
+    public IEnumerable<V> Values { get; }
 
     bool TryGetLowerBound(K key, out K boundKey, out V value);
     bool TryGetUpperBound(K key, out K boundKey, out V value);
@@ -28,6 +33,8 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
         }
 
         public bool Empty => !keyView.GetEnumerator().MoveNext();
+
+        public int Count => keyView.Count;
 
         public (K, V) Min => (keyView.Min, dict[keyView.Min]);
 
@@ -68,6 +75,15 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
             value = dict[view.Max];
             return true;
         }
+        public IEnumerable<K> Keys => keyView;
+
+        public IEnumerable<V> Values
+        {
+            get
+            {
+                foreach (var key in keyView) yield return dict[key];
+            }
+        }
 
         private IEnumerator<(K, V)> GetEnumeratorImpl()
         {
@@ -81,6 +97,18 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
 
     private readonly SortedDictionary<K, V> dict = [];
     private readonly SortedSet<K> keys = [];
+
+    public IndexedSortedDictionary() { }
+
+    public IndexedSortedDictionary(IEnumerable<(K, V)> items)
+    {
+        foreach (var (k, v) in items) Add(k, v);
+    }
+
+    public IndexedSortedDictionary(IReadOnlyDictionary<K, V> dict)
+    {
+        foreach (var e in dict) Add(e.Key, e.Value);
+    }
 
     public void Add(K key, V value)
     {
@@ -97,6 +125,8 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
     }
 
     public bool Empty => !keys.GetEnumerator().MoveNext();
+
+    public int Count => keys.Count;
 
     public (K, V) Min => (keys.Min, dict[keys.Min]);
 
@@ -152,6 +182,10 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
     }
 
     public IIndexedSortedDictionary<K, V> GetViewBetween(K left, K right) => new View(this, keys.GetViewBetween(left, right));
+
+    public IEnumerable<K> Keys => dict.Keys;
+
+    public IEnumerable<V> Values => dict.Values;
 
     private IEnumerator<(K, V)> GetEnumeratorImpl()
     {
