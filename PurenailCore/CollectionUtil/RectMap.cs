@@ -17,14 +17,17 @@ public class RectMap<T> : IEnumerable<(Rect, T)>
         foreach (var (r, v) in items) Set(r, v);
     }
 
-    public bool TryGetValue(float x, float y, [MaybeNullWhen(false)] out T value)
+    public bool TryGetValue(float x, float y, out T value)
     {
+#pragma warning disable CS8601 // Possible null reference assignment.
         value = default;
+#pragma warning restore CS8601 // Possible null reference assignment.
+
         if (!xMap.TryGetValue(x, out var yMap)) return false;
         return yMap.TryGetValue(y, out value);
     }
 
-    public bool TryGetValue(Vector2 p, [MaybeNullWhen(false)] out T value) => TryGetValue(p.x, p.y, out value);
+    public bool TryGetValue(Vector2 p, out T value) => TryGetValue(p.x, p.y, out value);
 
     public void Clear() => xMap.Clear();
 

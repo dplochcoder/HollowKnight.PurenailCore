@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RootNamespace>PurenailCore</RootNamespace>
     <AssemblyName>PurenailCore</AssemblyName>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <AssemblyTitle>PurenailCore</AssemblyTitle>
     <Product>PurenailCore</Product>
     <Description>Common functionality for Purenail's mods</Description>

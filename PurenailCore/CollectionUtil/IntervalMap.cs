@@ -26,7 +26,7 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
         foreach (var (interval, value) in input) Set(interval, value);
     }
 
-    private bool TryGetEntry(float x, [MaybeNullWhen(false)] out Entry entry) => entries.TryGetLowerBound(x, out _, out entry) && entry.Range.Contains(x);
+    private bool TryGetEntry(float x, out Entry entry) => entries.TryGetLowerBound(x, out _, out entry) && entry.Range.Contains(x);
 
     private IEnumerable<Entry> GetEntries(Interval range)
     {
@@ -34,12 +34,14 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
         foreach (var (_, v) in entries.GetViewBetween(range.Min, range.Max)) yield return v;
     }
 
-    public bool TryGetValue(float x, [MaybeNullWhen(false)] out T value)
+    public bool TryGetValue(float x, out T value)
     {
         if (!TryGetEntry(x, out var entry))
         {
+#pragma warning disable CS8601 // Possible null reference assignment.
             value = default;
             return false;
+#pragma warning restore CS8601 // Possible null reference assignment.
         }
 
         value = entry.Value;
