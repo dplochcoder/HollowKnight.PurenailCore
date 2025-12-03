@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using UnityEngine;
 
 namespace PurenailCore.CollectionUtil;
 
-public class RectMap<T> : IEnumerable<(Rect, T)>
+// Interval map extended to two dimensions.
+public class RectMap<T> : IEnumerable<(Rect, T)>, IEquatable<RectMap<T>>
 {
     private readonly IntervalMap<IntervalMap<T>> xMap = [];
 
@@ -29,7 +30,27 @@ public class RectMap<T> : IEnumerable<(Rect, T)>
 
     public bool TryGetValue(Vector2 p, out T value) => TryGetValue(p.x, p.y, out value);
 
+    public IEnumerable<(Rect, T)> SubMap(Rect range)
+    {
+        foreach (var (x, yMap) in xMap.SubMap(range.X))
+            foreach (var (y, value) in yMap.SubMap(range.Y))
+                yield return (new(x, y), value);
+    }
+
     public void Clear() => xMap.Clear();
+
+    public void Clear(Rect rect)
+    {
+        xMap.Add(rect.X, [], true, (orig, _) =>
+        {
+            IntervalMap<T> trimmed = new(orig);
+            trimmed.Clear(rect.Y);
+            return trimmed;
+        });
+
+        List<Interval> toRemove = [.. xMap.SubMap(rect.X).Where(p => p.Item2.Empty).Select(p => p.Item1)];
+        toRemove.ForEach(xMap.Clear);
+    }
 
     public static T DefaultCombiner(T orig, T addend) => addend;
 
@@ -58,4 +79,6 @@ public class RectMap<T> : IEnumerable<(Rect, T)>
     public IEnumerator<(Rect, T)> GetEnumerator() => GetEnumeratorInternal();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
+
+    public bool Equals(RectMap<T> other) => xMap.Equals(other.xMap);
 }

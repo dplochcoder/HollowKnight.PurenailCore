@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace PurenailCore.CollectionUtil;
@@ -34,6 +33,12 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
         foreach (var (_, v) in entries.GetViewBetween(range.Min, range.Max)) yield return v;
     }
 
+    public IEnumerable<(Interval, T)> SubMap(Interval range) => GetEntries(range).Select(e =>
+    {
+        var interval = e.Range & range;
+        return (interval, e.Value);
+    });
+
     public bool TryGetValue(float x, out T value)
     {
         if (!TryGetEntry(x, out var entry))
@@ -51,6 +56,22 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
     public bool Empty => entries.Empty;
 
     public void Clear() => entries.Clear();
+
+    public void Clear(Interval range)
+    {
+        List<Entry> toSet = [];
+        List<float> toRemove = [];
+        foreach (var entry in GetEntries(range))
+        {
+            toRemove.Add(entry.Key);
+
+            if (entry.Range.Min < range.Min) toSet.Add(new(new(entry.Range.Min, range.Min), entry.Value));
+            if (entry.Range.Max > range.Max) toSet.Add(new(new(range.Max, entry.Range.Max), entry.Value));
+        }
+
+        toRemove.ForEach(k => entries.Remove(k));
+        toSet.ForEach(e => Set(e.Range, e.Value, coalesce: false));
+    }
 
     public static T DefaultCombiner(T orig, T addend) => addend;
 
@@ -112,22 +133,6 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
 
         Entry entry = new(range, value);
         entries.Add(entry.Key, entry);
-    }
-
-    public void Clear(Interval range)
-    {
-        List<Entry> toSet = [];
-        List<float> toRemove = [];
-        foreach (var entry in GetEntries(range))
-        {
-            toRemove.Add(entry.Key);
-
-            if (entry.Range.Min < range.Min) toSet.Add(new(new(entry.Range.Min, range.Min), entry.Value));
-            if (entry.Range.Max > range.Max) toSet.Add(new(new(range.Max, entry.Range.Max), entry.Value));
-        }
-
-        toRemove.ForEach(k => entries.Remove(k));
-        toSet.ForEach(e => Set(e.Range, e.Value, coalesce: false));
     }
 
     private IEnumerator<(Interval, T)> GetEnumeratorInternal() => entries.Select(pair => (pair.Item2.Range, pair.Item2.Value)).GetEnumerator();
