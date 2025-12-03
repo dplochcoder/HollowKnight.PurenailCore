@@ -30,4 +30,12 @@ public class Rect(Vector2 Center, Vector2 Size)
     public static Rect Intersection(Rect a, Rect b) => new(a.X & b.X, a.Y & b.Y);
 
     public static Rect operator &(Rect a, Rect b) => Intersection(a, b);
+
+    public static implicit operator UnityEngine.Rect(Rect r) => new()
+    {
+        center = r.Center,
+        size = r.Size
+    };
+
+    public static implicit operator Rect(UnityEngine.Rect r) => new(r.center, r.size);
 }
