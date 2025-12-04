@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PurenailCore.CollectionUtil;
 
-public class SortedMultimap<K, V> where K : IComparable<K>
+public class SortedMultimap<K, V> : IEnumerable<(K, IReadOnlyCollection<V>)> where K : IComparable<K>
 {
     private readonly SortedDictionary<K, HashSet<V>> dict = [];
 
@@ -68,4 +70,10 @@ public class SortedMultimap<K, V> where K : IComparable<K>
 
         return false;
     }
+
+    private IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumeratorInternal() => dict.Select(e => (e.Key, (IReadOnlyCollection<V>)e.Value)).GetEnumerator();
+
+    public IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumerator() => GetEnumeratorInternal();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
 }
