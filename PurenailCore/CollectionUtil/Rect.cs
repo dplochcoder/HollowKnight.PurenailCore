@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PurenailCore.CollectionUtil;
 
-public class Rect(Vector2 Center, Vector2 Size)
+public class Rect(Vector2 Center, Vector2 Size) : IEquatable<Rect>
 {
     public readonly Vector2 Center = Center;
     public readonly Vector2 Size = (Size.x >= 0 && Size.y >= 0) ? Size : throw new ArgumentException($"Invalid size: {Size}");
@@ -20,6 +20,8 @@ public class Rect(Vector2 Center, Vector2 Size)
     public Vector2 Max => new(MaxX, MaxY);
     public Interval X => new(MinX, MaxX);
     public Interval Y => new(MinY, MaxY);
+    public float Width => Size.x;
+    public float Height => Size.y;
 
     public bool IsEmpty => Size.x == 0 || Size.y == 0;
 
@@ -28,6 +30,12 @@ public class Rect(Vector2 Center, Vector2 Size)
     public bool Contains(Rect rect) => X.Contains(rect.X) && Y.Contains(rect.Y);
 
     public static Rect Intersection(Rect a, Rect b) => new(a.X & b.X, a.Y & b.Y);
+
+    public override bool Equals(object obj) => obj is Rect rect && Equals(rect);
+
+    public override int GetHashCode() => IsEmpty ? 0 : (Center.x.GetHashCode() ^ Center.y.GetHashCode()) ^ (Size.x.GetHashCode() ^ Size.y.GetHashCode());
+
+    public bool Equals(Rect other) => (IsEmpty && other.IsEmpty) || (Center.x == other.Center.x && Center.y == other.Center.y && Size.x == other.Size.x && Size.y == other.Size.y);
 
     public static Rect operator &(Rect a, Rect b) => Intersection(a, b);
 
