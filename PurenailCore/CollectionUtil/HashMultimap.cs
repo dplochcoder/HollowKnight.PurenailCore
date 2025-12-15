@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PurenailCore.CollectionUtil;
 
 // Dictionary that can map multiple values to a single key.
-public class HashMultimap<K, V>
+public class HashMultimap<K, V> : IMultimap<K, V>
 {
     private readonly Dictionary<K, HashSet<V>> dict = [];
 
@@ -26,8 +28,6 @@ public class HashMultimap<K, V>
 
     public bool Contains(K key, V value) => dict.TryGetValue(key, out var values) && values.Contains(value);
 
-    private static readonly List<V> EmptyList = [];
-
     public bool TryGet(K key, out IEnumerable<V> values)
     {
         if (dict.TryGetValue(key, out var set))
@@ -37,7 +37,7 @@ public class HashMultimap<K, V>
         }
         else
         {
-            values = EmptyList;
+            values = EmptyCollection<V>.Instance;
             return false;
         }
     }
@@ -45,7 +45,7 @@ public class HashMultimap<K, V>
     public IEnumerable<V> Get(K key)
     {
         if (dict.TryGetValue(key, out var values)) return values;
-        else return EmptyList;
+        else return EmptyCollection<V>.Instance;
     }
 
     public bool Add(K key, V value)
@@ -70,4 +70,10 @@ public class HashMultimap<K, V>
 
         return false;
     }
+
+    private IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumeratorInternal() => dict.Select(e => (e.Key, (IReadOnlyCollection<V>)e.Value)).GetEnumerator();
+
+    public IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumerator() => GetEnumeratorInternal();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
 }
