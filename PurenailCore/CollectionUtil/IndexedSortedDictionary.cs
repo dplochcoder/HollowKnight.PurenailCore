@@ -1,24 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PurenailCore.CollectionUtil;
 
-public interface IIndexedSortedDictionary<K, V> : IEnumerable<(K, V)>
+public interface IIndexedSortedDictionary<K, V> : IReadOnlyDictionary<K, V>
 {
     bool Empty { get; }
-    int Count { get; }
 
     (K, V) Min { get; }
     (K, V) Max { get; }
-
-    public IEnumerable<K> Keys { get; }
-    public IEnumerable<V> Values { get; }
 
     bool TryGetLowerBound(K key, out K boundKey, out V value);
     bool TryGetUpperBound(K key, out K boundKey, out V value);
 }
 
-public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
+public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>, IDictionary<K, V>
 {
     private class View : IIndexedSortedDictionary<K, V>
     {
@@ -84,14 +81,34 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
             }
         }
 
-        private IEnumerator<(K, V)> GetEnumeratorImpl()
+        public V this[K key] => keyView.Contains(key) ? dict[key] : throw new KeyNotFoundException($"{key}");
+
+        public bool ContainsKey(K key) => keyView.Contains(key);
+
+        public bool TryGetValue(K key, out V value)
+        {
+            if (keyView.Contains(key))
+            {
+                value = dict[key];
+                return true;
+            }
+
+#pragma warning disable CS8601 // Possible null reference assignment.
+            value = default;
+#pragma warning restore CS8601 // Possible null reference assignment.
+            return false;
+        }
+
+        private IEnumerator<(K, V)> GetEnumeratorInternal()
         {
             foreach (var key in keyView) yield return (key, dict[key]);
         }
 
-        public IEnumerator<(K, V)> GetEnumerator() => GetEnumeratorImpl();
+        public IEnumerator<(K, V)> GetEnumerator() => GetEnumeratorInternal();
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorImpl();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
+
+        IEnumerator<KeyValuePair<K, V>> IEnumerable<KeyValuePair<K, V>>.GetEnumerator() => keyView.Select(k => new KeyValuePair<K, V>(k, dict[k])).GetEnumerator();
     }
 
     private readonly SortedDictionary<K, V> dict = [];
@@ -115,6 +132,8 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
         dict[key] = value;
     }
 
+    public void Add(KeyValuePair<K, V> item) => Add(item.Key, item.Value);
+
     public bool Remove(K key)
     {
         if (!keys.Remove(key)) return false;
@@ -132,6 +151,12 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
     public (K, V) Max => (keys.Max, dict[keys.Max]);
 
     public bool TryGetValue(K key, out V value) => dict.TryGetValue(key, out value);
+
+    public bool ContainsKey(K key) => dict.ContainsKey(key);
+
+    public bool Contains(KeyValuePair<K, V> item) => dict.Contains(item);
+
+    public bool Remove(KeyValuePair<K, V> item) => dict.Contains(item) && dict.Remove(item.Key);
 
     public V this[K key]
     {
@@ -182,16 +207,26 @@ public class IndexedSortedDictionary<K, V> : IIndexedSortedDictionary<K, V>
 
     public IIndexedSortedDictionary<K, V> GetViewBetween(K left, K right) => new View(this, keys.GetViewBetween(left, right));
 
-    public IEnumerable<K> Keys => dict.Keys;
+    public ICollection<K> Keys => dict.Keys;
 
-    public IEnumerable<V> Values => dict.Values;
+    public ICollection<V> Values => dict.Values;
 
-    private IEnumerator<(K, V)> GetEnumeratorImpl()
+    public bool IsReadOnly => false;
+
+    IEnumerable<K> IReadOnlyDictionary<K, V>.Keys => Keys;
+
+    IEnumerable<V> IReadOnlyDictionary<K, V>.Values => Values;
+
+    private IEnumerator<(K, V)> GetEnumeratorInternal()
     {
         foreach (var e in dict) yield return (e.Key, e.Value);
     }
 
-    public IEnumerator<(K, V)> GetEnumerator() => GetEnumeratorImpl();
+    public IEnumerator<(K, V)> GetEnumerator() => GetEnumeratorInternal();
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorImpl();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
+
+    IEnumerator<KeyValuePair<K, V>> IEnumerable<KeyValuePair<K, V>>.GetEnumerator() => dict.GetEnumerator();
+
+    public void CopyTo(KeyValuePair<K, V>[] array, int arrayIndex) => dict.CopyTo(array, arrayIndex);
 }

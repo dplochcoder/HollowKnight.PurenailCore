@@ -32,10 +32,10 @@ public class IndexedSortedMultimap<K, V>
         if (!dict.TryGetLowerBound(beginInclusive, out K boundKey, out var set) || (KeyLessThan(boundKey, beginInclusive) && !set.Contains(value))) GetOrAddNew(beginInclusive);
         if (!dict.TryGetLowerBound(endExclusive, out boundKey, out set) || (KeyLessThan(boundKey, endExclusive) && !set.Contains(value))) GetOrAddNew(endExclusive);
 
-        foreach (var (k, v) in dict.GetViewBetween(beginInclusive, endExclusive))
+        foreach (var e in dict.GetViewBetween(beginInclusive, endExclusive))
         {
-            if (KeysEqual(k, endExclusive)) continue;
-            v.Add(value);
+            if (KeysEqual(e.Key, endExclusive)) continue;
+            e.Value.Add(value);
         }
     }
 
@@ -44,10 +44,10 @@ public class IndexedSortedMultimap<K, V>
         if (!dict.TryGetLowerBound(beginInclusive, out K boundKey, out var set) || (KeyLessThan(boundKey, beginInclusive) && set.Contains(value))) GetOrAddNew(beginInclusive);
         if (!dict.TryGetLowerBound(endExclusive, out boundKey, out set) || (KeyLessThan(boundKey, endExclusive) && set.Contains(value))) GetOrAddNew(endExclusive);
 
-        foreach (var (k, v) in dict.GetViewBetween(beginInclusive, endExclusive))
+        foreach (var e in dict.GetViewBetween(beginInclusive, endExclusive))
         {
-            if (KeysEqual(k, endExclusive)) continue;
-            v.Remove(value);
+            if (KeysEqual(e.Key, endExclusive)) continue;
+            e.Value.Remove(value);
         }
     }
 

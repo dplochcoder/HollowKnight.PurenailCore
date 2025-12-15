@@ -30,7 +30,7 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
     private IEnumerable<Entry> GetEntries(Interval range)
     {
         if (TryGetEntry(range.Min, out var entry) && entry.Range.Min < range.Min) yield return entry;
-        foreach (var (_, v) in entries.GetViewBetween(range.Min, range.Max)) yield return v;
+        foreach (var v in entries.GetViewBetween(range.Min, range.Max).Values) yield return v;
     }
 
     public IEnumerable<(Interval, T)> SubMap(Interval range) => GetEntries(range).Select(e =>
@@ -135,7 +135,7 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
         entries.Add(entry.Key, entry);
     }
 
-    private IEnumerator<(Interval, T)> GetEnumeratorInternal() => entries.Select(pair => (pair.Item2.Range, pair.Item2.Value)).GetEnumerator();
+    private IEnumerator<(Interval, T)> GetEnumeratorInternal() => entries.Values.Select(v => (v.Range, v.Value)).GetEnumerator();
 
     public IEnumerator<(Interval, T)> GetEnumerator() => GetEnumeratorInternal();
 
