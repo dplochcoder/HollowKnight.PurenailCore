@@ -1,10 +1,92 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PurenailCore.CollectionUtil;
 
-public class IndexedSortedMultimap<K, V>
+public interface IIndexedSortedMultimap<K, V> : IReadOnlyMultimap<K, V>
 {
+    bool Empty { get; }
+
+    (K, IReadOnlyCollection<V>) Min { get; }
+    (K, IReadOnlyCollection<V>) Max { get; }
+
+    bool TryGetLowerBound(K key, out K boundKey, out IReadOnlyCollection<V> value);
+    bool TryGetUpperBound(K key, out K boundKey, out IReadOnlyCollection<V> value);
+}
+
+public class IndexedSortedMultimap<K, V> : IIndexedSortedMultimap<K, V>, IMultimap<K, V>
+{
+    private class View(IIndexedSortedDictionary<K, HashSet<V>> view) : IIndexedSortedMultimap<K, V>
+    {
+        public int KeyCount => view.Count;
+
+        public bool Empty => view.Empty;
+
+        public (K, IReadOnlyCollection<V>) Min => view.Min;
+
+        public (K, IReadOnlyCollection<V>) Max => view.Max;
+
+        public IEnumerable<K> Keys => view.Keys;
+
+        public bool Contains(K key, V value) => view.TryGetValue(key, out var set) && set.Contains(value);
+
+        public IReadOnlyCollection<V> Get(K key) => view.TryGetValue(key, out var set) ? set : EmptyCollection<V>.Instance;
+
+        public bool TryGet(K key, out IReadOnlyCollection<V> values)
+        {
+            if (view.TryGetValue(key, out var set))
+            {
+                values = set;
+                return true;
+            }
+
+            values = EmptyCollection<V>.Instance;
+            return false;
+        }
+
+        public bool TryGetLowerBound(K key, out K boundKey, out IReadOnlyCollection<V> value)
+        {
+            if (view.TryGetLowerBound(key, out boundKey, out var set))
+            {
+                value = set;
+                return true;
+            }
+
+            value = EmptyCollection<V>.Instance;
+            return false;
+        }
+
+        public bool TryGetUpperBound(K key, out K boundKey, out IReadOnlyCollection<V> value)
+        {
+            if (view.TryGetUpperBound(key, out boundKey, out var set))
+            {
+                value = set;
+                return true;
+            }
+
+            value = EmptyCollection<V>.Instance;
+            return false;
+        }
+
+        private IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumeratorInternal()
+        {
+            foreach (var e in view)
+                yield return (e.Key, e.Value);
+        }
+
+        public IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumerator() => GetEnumeratorInternal();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
+    }
+
     private readonly IndexedSortedDictionary<K, HashSet<V>> dict = [];
+
+    public int KeyCount => dict.Count;
+
+    public bool Empty => dict.Empty;
+
+    public void Clear() => dict.Clear();
 
     private HashSet<V> GetOrAddNew(K key)
     {
@@ -23,58 +105,72 @@ public class IndexedSortedMultimap<K, V>
         }
     }
 
-    private bool KeysEqual(K key1, K key2) => EqualityComparer<K>.Default.Equals(key1, key2);
+    public bool Contains(K key, V value) => dict.TryGetValue(key, out var set) && set.Contains(value);
 
-    private bool KeyLessThan(K key1, K key2) => Comparer<K>.Default.Compare(key1, key2) < 0;
+    public (K, IReadOnlyCollection<V>) Min => dict.Min;
 
-    public void Add(K beginInclusive, K endExclusive, V value)
+    public (K, IReadOnlyCollection<V>) Max => dict.Max;
+
+    public bool TryGet(K key, out IReadOnlyCollection<V> values)
     {
-        if (!dict.TryGetLowerBound(beginInclusive, out K boundKey, out var set) || (KeyLessThan(boundKey, beginInclusive) && !set.Contains(value))) GetOrAddNew(beginInclusive);
-        if (!dict.TryGetLowerBound(endExclusive, out boundKey, out set) || (KeyLessThan(boundKey, endExclusive) && !set.Contains(value))) GetOrAddNew(endExclusive);
-
-        foreach (var e in dict.GetViewBetween(beginInclusive, endExclusive))
+        if (dict.TryGetValue(key, out var set))
         {
-            if (KeysEqual(e.Key, endExclusive)) continue;
-            e.Value.Add(value);
+            values = set;
+            return true;
         }
+
+        values = EmptyCollection<V>.Instance;
+        return false;
     }
 
-    public void Remove(K beginInclusive, K endExclusive, V value)
-    {
-        if (!dict.TryGetLowerBound(beginInclusive, out K boundKey, out var set) || (KeyLessThan(boundKey, beginInclusive) && set.Contains(value))) GetOrAddNew(beginInclusive);
-        if (!dict.TryGetLowerBound(endExclusive, out boundKey, out set) || (KeyLessThan(boundKey, endExclusive) && set.Contains(value))) GetOrAddNew(endExclusive);
-
-        foreach (var e in dict.GetViewBetween(beginInclusive, endExclusive))
-        {
-            if (KeysEqual(e.Key, endExclusive)) continue;
-            e.Value.Remove(value);
-        }
-    }
-
-    private static readonly List<V> EmptyList = [];
-
-    public IEnumerable<V> Get(K key)
+    public IReadOnlyCollection<V> Get(K key)
     {
         if (dict.TryGetLowerBound(key, out K _, out var set)) return set;
-        else return EmptyList;
+        else return EmptyCollection<V>.Instance;
     }
 
-    public void Coalesce()
+    public bool Add(K key, V value) => GetOrAddNew(key).Add(value);
+
+    public bool Remove(K key, V value)
     {
-        List<(K, HashSet<V>)> replace = [];
-        HashSet<V> previous = [];
+        if (!dict.TryGetValue(key, out var set) || !set.Remove(value))
+            return false;
 
-        foreach (var (k, v) in dict)
+        if (set.Count == 0) dict.Remove(key);
+        return true;
+    }
+
+    public IEnumerable<K> Keys => dict.Keys;
+
+    public bool TryGetLowerBound(K key, out K boundKey, out IReadOnlyCollection<V> value)
+    {
+        if (dict.TryGetLowerBound(key, out boundKey, out var set))
         {
-            if (v.SetEquals(previous)) continue;
-
-            replace.Add((k, v));
-            previous = v;
+            value = set;
+            return true;
         }
 
-        dict.Clear();
-        foreach (var (k, v) in replace) dict[k] = v;
+        value = EmptyCollection<V>.Instance;
+        return false;
     }
 
-    public void Clear() => dict.Clear();
+    public bool TryGetUpperBound(K key, out K boundKey, out IReadOnlyCollection<V> value)
+    {
+        if (dict.TryGetUpperBound(key, out boundKey, out var set))
+        {
+            value = set;
+            return true;
+        }
+
+        value = EmptyCollection<V>.Instance;
+        return false;
+    }
+
+    public IIndexedSortedMultimap<K, V> GetViewBetween(K left, K right) => new View(dict.GetViewBetween(left, right));
+
+    private IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumeratorInternal() => dict.Select(p => (p.Key, (IReadOnlyCollection<V>)p.Value)).GetEnumerator();
+
+    public IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumerator() => GetEnumeratorInternal();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
 }

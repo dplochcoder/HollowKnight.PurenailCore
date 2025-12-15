@@ -9,20 +9,7 @@ public class HashMultimap<K, V> : IMultimap<K, V>
 {
     private readonly Dictionary<K, HashSet<V>> dict = [];
 
-    public Dictionary<K, HashSet<V>> AsDict
-    {
-        get
-        {
-            var ret = new Dictionary<K, HashSet<V>>();
-            foreach (var e in dict) ret.Add(e.Key, [.. e.Value]);
-            return ret;
-        }
-        set
-        {
-            dict.Clear();
-            foreach (var e in value) dict.Add(e.Key, [.. e.Value]);
-        }
-    }
+    public int KeyCount => dict.Count;
 
     public IEnumerable<K> Keys => dict.Keys;
 
@@ -47,6 +34,8 @@ public class HashMultimap<K, V> : IMultimap<K, V>
         if (dict.TryGetValue(key, out var values)) return values;
         else return EmptyCollection<V>.Instance;
     }
+
+    public void Clear() => dict.Clear();
 
     public bool Add(K key, V value)
     {
@@ -76,4 +65,14 @@ public class HashMultimap<K, V> : IMultimap<K, V>
     public IEnumerator<(K, IReadOnlyCollection<V>)> GetEnumerator() => GetEnumeratorInternal();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
+
+    public bool TryGet(K key, out IReadOnlyCollection<V> values)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    IReadOnlyCollection<V> IReadOnlyMultimap<K, V>.Get(K key)
+    {
+        throw new System.NotImplementedException();
+    }
 }

@@ -26,8 +26,6 @@ public class SortedMultimap<K, V> : IEnumerable<(K, IReadOnlyCollection<V>)> whe
 
     public bool Contains(K key, V value) => dict.TryGetValue(key, out var values) && values.Contains(value);
 
-    private static readonly List<V> EmptyList = [];
-
     public bool TryGet(K key, out IEnumerable<V> values)
     {
         if (dict.TryGetValue(key, out var set))
@@ -37,7 +35,7 @@ public class SortedMultimap<K, V> : IEnumerable<(K, IReadOnlyCollection<V>)> whe
         }
         else
         {
-            values = EmptyList;
+            values = EmptyCollection<V>.Instance;
             return false;
         }
     }
@@ -45,7 +43,7 @@ public class SortedMultimap<K, V> : IEnumerable<(K, IReadOnlyCollection<V>)> whe
     public IEnumerable<V> Get(K key)
     {
         if (dict.TryGetValue(key, out var values)) return values;
-        else return EmptyList;
+        else return EmptyCollection<V>.Instance;
     }
 
     public bool Add(K key, V value)

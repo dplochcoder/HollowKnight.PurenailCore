@@ -79,11 +79,21 @@ public static class CameraPositionModifier
 
         cursor.Goto(0);
         cursor.GotoNext(MoveType.Before, i => i.MatchStfld<CameraController>(nameof(CameraController.destination)));
-        cursor.EmitDelegate((Vector3 pos) => ModifyInternal(CameraModifierPhase.TARGET_BEFORE_LOCK, pos));
+        cursor.EmitDelegate((Vector3 pos) =>
+        {
+            Vector3 updated = pos;
+            return ApplyModifiers(CameraModifierPhase.TARGET_BEFORE_LOCK, ref updated) ? updated : pos;
+        });
 
         cursor.GotoNext(i => i.MatchCall<Vector3>(nameof(Vector3.SmoothDamp)));
-        cursor.GotoPrev(MoveType.After, i => i.MatchLdflda<CameraController>(nameof(CameraController.destination)));
-        cursor.EmitDelegate((Vector3 pos) => ModifyInternal(CameraModifierPhase.TARGET_AFTER_LOCK, pos));
+        cursor.GotoPrev(MoveType.Before, i => i.MatchLdflda<CameraController>(nameof(CameraController.destination)));
+        cursor.EmitDelegate((CameraController self) =>
+        {
+            Vector3 updated = self.destination;
+            if (ApplyModifiers(CameraModifierPhase.TARGET_AFTER_LOCK, ref updated)) self.destination = updated;
+
+            return self;
+        });
     }
 
     private static bool loaded = false;
