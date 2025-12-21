@@ -16,6 +16,14 @@ public class Deferred<T>
 
     public bool IsPresent => target != null;
 
+    public bool TryGet(out T value)
+    {
+#pragma warning disable CS8601 // Possible null reference assignment.
+        value = target;
+#pragma warning restore CS8601 // Possible null reference assignment.
+        return value != null;
+    }
+
     public void Set(T target)
     {
         this.target = target;
