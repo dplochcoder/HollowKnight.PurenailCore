@@ -27,11 +27,11 @@ public class JsonUtil<M> where M : Mod
         return path;
     }
 
-    public static T DeserializeEmbedded<T>(string embeddedResourcePath) where T : class => JsonUtil.DeserializeFromEmbeddedResource<T>(asm, embeddedResourcePath);
+    public static T DeserializeEmbedded<T>(string embeddedResourcePath) where T : class => JsonUtil.DeserializeFromEmbeddedResource<T>(asm, embeddedResourcePath)!;
 
-    public static T DeserializeFromPath<T>(string path) where T : class => JsonUtil.DeserializeFromFile<T>(path);
+    public static T DeserializeFromPath<T>(string path) where T : class => JsonUtil.DeserializeFromFile<T>(path)!;
 
-    public static T DeserializeFromString<T>(string data) where T : class => serializer.DeserializeFromString<T>(data);
+    public static T DeserializeFromString<T>(string data) where T : class => serializer.DeserializeFromString<T>(data)!;
 
     public static void Serialize(object o, string fileName) 
     {
@@ -41,7 +41,9 @@ public class JsonUtil<M> where M : Mod
 
     public static void Serialize(object o, TextWriter tw) => serializer.Serialize(tw, o);
 
-    public static void RewriteJsonFile<T>(T data, string path)
+    public static void Serialize(object o, JsonWriter jw) => serializer.Serialize(jw, o);
+
+    public static void RewriteJsonFile<T>(T data, string path) where T : class
     {
         File.Delete(path);
         Serialize(data, path);

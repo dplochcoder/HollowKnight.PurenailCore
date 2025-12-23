@@ -1,5 +1,6 @@
 ﻿using RandomizerCore.Logic;
 using RandomizerCore.StringLogic;
+using RandomizerCore.StringParsing;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,31 +9,17 @@ namespace PurenailCore.RandoUtil;
 public class LogicReplacer
 {
     public HashSet<string> IgnoredNames = [];
-    public Dictionary<string, SimpleToken> SimpleTokenReplacements = [];
+    public Dictionary<string, Token> TokenReplacements = [];
 
-    private LogicClause EditLogicClause(LogicClause lc)
+    private Expression<LogicExpressionType>? Transform(Expression<LogicExpressionType> expr, ExpressionBuilder<LogicExpressionType> builder)
     {
-        LogicClauseBuilder? lcb = null;
-        for (int i = 0; i < lc.Count; i++)
-        {
-            var token = lc[i];
-            if (token is SimpleToken st && SimpleTokenReplacements.TryGetValue(st.Write(), out SimpleToken repl))
-            {
-                if (lcb == null)
-                {
-                    lcb = new();
-                    for (int j = 0; j < i; j++) lcb.Append(lc[j]);
-                }
-                lcb.Append(repl);
-            }
-            else
-            {
-                lcb?.Append(token);
-            }
-        }
-
-        return lcb != null ? new(lcb) : lc;
+        if (expr is LogicAtomExpression atom && TokenReplacements.TryGetValue(atom.Token.Print(), out Token repl))
+            return new LogicAtomExpression(repl);
+        else
+            return null;
     }
+
+    private LogicClause EditLogicClause(LogicClause lc) => new(lc.Expr.Transform(Transform, new LogicExpressionBuilder()));
 
     public void Apply(LogicManagerBuilder lmb)
     {
