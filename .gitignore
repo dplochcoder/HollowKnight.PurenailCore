@@ -7,5 +7,6 @@
 /packages
 /UnitTests/bin
 /UnitTests/obj
-/UnitTests/UnitTests.AssemblyInfo.cs
+/UnitTests/Properties/AssemblyInfo.cs
+
 
