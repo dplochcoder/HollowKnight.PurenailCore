@@ -14,6 +14,8 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
         public readonly T Value = Value;
 
         public float Key => Range.Min;
+
+        public override string ToString() => $"{{{Range}: {Value}}}";
     }
 
     private readonly IndexedSortedDictionary<float, Entry> entries = [];
@@ -98,9 +100,14 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
     // Explicitly set the contents of a specific range, ignoring previous contents.
     public void Set(Interval range, T value, bool coalesce = true)
     {
+        // Remove interior entries.
+        List<float> toRemove = [.. GetEntries(range).Where(e => range.Contains(e.Range)).Select(e => e.Key)];
+        toRemove.ForEach(k => entries.Remove(k));
+
         // Coalesce
         bool haveLower = TryGetEntry(range.Min, out var lowerEntry);
         bool haveUpper = TryGetEntry(range.Max, out var upperEntry);
+        List<Entry> toAdd = [];
         if (haveLower)
         {
             if (coalesce && EqualityComparer<T>.Default.Equals(lowerEntry!.Value, value))
@@ -111,7 +118,7 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
             else if (lowerEntry!.Range.Min < range.Min)
             {
                 Entry clipped = new(new(lowerEntry.Range.Min, range.Min), lowerEntry.Value);
-                entries.Add(lowerEntry.Key, clipped);
+                toAdd.Add(clipped);
             }
             else entries.Remove(lowerEntry.Key);
         }
@@ -124,12 +131,16 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
             }
             else if (upperEntry!.Range.Max > range.Max)
             {
-                Entry clipped = new(new(range.Max, upperEntry.Range.Max), upperEntry.Value);
                 entries.Remove(upperEntry.Key);
-                entries.Add(clipped.Key, clipped);
+
+                Entry clipped = new(new(range.Max, upperEntry.Range.Max), upperEntry.Value);
+                toAdd.Add(clipped);
             }
             else entries.Remove(upperEntry.Key);
         }
+
+        // Do adds after removals in case lower + upper are the same.
+        toAdd.ForEach(e => entries.Add(e.Key, e));
 
         Entry entry = new(range, value);
         entries.Add(entry.Key, entry);
@@ -142,4 +153,6 @@ public class IntervalMap<T> : IEnumerable<(Interval, T)>, IEquatable<IntervalMap
     IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorInternal();
 
     public bool Equals(IntervalMap<T> other) => entries.Count == other.entries.Count && entries.GetEnumerator().EnumeratorEqual(other.entries.GetEnumerator());
+
+    public override string ToString() => $"[{string.Join(", ", entries.Values)}]";
 }

@@ -4,3 +4,6 @@
 
 /PurenailCore/.vs/PurenailCore
 /.vs
+/packages
+/UnitTests/bin
+/UnitTests/obj

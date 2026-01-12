@@ -7,4 +7,6 @@ namespace PurenailCore.CollectionUtil;
 public class EquatableHashSet<T> : HashSet<T>, IEquatable<EquatableHashSet<T>>
 {
     public bool Equals(EquatableHashSet<T> other) => Count == other.Count && this.All(other.Contains);
+
+    public override string ToString() => $"[{string.Join(", ", this)}]";
 }
